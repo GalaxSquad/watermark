@@ -138,7 +138,7 @@ export function RefreshButton({
           onClick={handleRefresh}
           disabled={isDisabled}
           className={cn(
-            "relative flex items-center justify-center size-9 rounded-lg border transition-all duration-200",
+            "relative flex items-center justify-center size-9 rounded-lg border transition-[color,background-color,border-color,transform] duration-150 ease-out active:scale-95",
             state === "idle" &&
               "border-border bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border-hover cursor-pointer",
             state === "refreshing" &&

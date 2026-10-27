@@ -66,7 +66,7 @@ export function LagMonitorTab() {
           <PopoverTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 text-muted-foreground hover:text-foreground rounded border border-transparent hover:border-border hover:bg-secondary transition-all outline-none",
+                "flex items-center gap-1.5 px-2.5 py-1 text-muted-foreground hover:text-foreground rounded border border-transparent hover:border-border hover:bg-secondary transition-colors duration-150 outline-none active:scale-[0.98]",
                 showFilters && "bg-secondary border-border text-foreground"
               )}
             >

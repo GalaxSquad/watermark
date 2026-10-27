@@ -37,17 +37,22 @@ export function TopicDetailPage() {
         <Icon name="chevron-left" className="size-4" />
         Topics
       </button>
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
-            Topic: <span className="text-primary">{topicId}</span>
+      <div className="flex items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1.5 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider">
+              Topic
+            </span>
+            <TopicOwnershipHeader
+              topicName={topicId}
+              onEdit={() => setEditorOpen(true)}
+            />
+          </div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight text-foreground break-all" title={topicId}>
+            {topicId}
           </h1>
-          <TopicOwnershipHeader
-            topicName={topicId}
-            onEdit={() => setEditorOpen(true)}
-          />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <RefreshButton
             queryKeys={[
               ["messages", topicId],

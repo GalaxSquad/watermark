@@ -55,9 +55,11 @@ export function DropGroupDialog({ groupId, onClose, onSuccess }: DropGroupDialog
     <AlertDialog open={!!groupId} onOpenChange={(open) => { if (!open) onClose(); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-red-400">
-            <Icon name="alert-triangle" className="size-4" tone="danger" />
-            Drop consumer group "{groupId}"?
+          <AlertDialogTitle className="flex items-start gap-2 text-red-400">
+            <Icon name="alert-triangle" className="size-4 shrink-0 mt-0.5" tone="danger" />
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+              Drop consumer group "{groupId}"?
+            </span>
           </AlertDialogTitle>
           <AlertDialogDescription className="text-foreground">
             This will permanently delete the consumer group{" "}

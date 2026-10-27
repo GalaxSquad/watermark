@@ -37,11 +37,11 @@ export function MonitoringPage() {
 
   return (
     <div className="h-[calc(100vh-128px)] flex flex-col">
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
+      <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider min-w-0">
           Monitoring
         </h1>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <AlertRefreshControls
             enabled={prefs.enabled}
             intervalMs={prefs.intervalMs}

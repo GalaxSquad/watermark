@@ -22,7 +22,7 @@ interface TopicListTableProps {
 
 export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideInternal }: TopicListTableProps) {
   const isReadOnly = useReadOnly();
-  const { data: topics = [] } = useKafkaQuery(["topics"], GetTopics);
+  const { data: topics = [], isLoading } = useKafkaQuery(["topics"], GetTopics);
   const { annotations } = useAnnotations();
   const {
     selectedTopicsForTag,
@@ -152,6 +152,7 @@ export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideI
       <DataTable
         data={filteredData}
         columns={columns}
+        isLoading={isLoading}
         onRowClick={(row) => onTopicClick(row.name)}
         globalFilter={searchFilter}
         getRowContextMenu={(topic) =>

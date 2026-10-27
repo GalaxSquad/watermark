@@ -225,6 +225,17 @@ export function MessagesTab({ topicName }: MessagesTabProps) {
     };
   }, [topicName]);
 
+  // Close inspector on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedMessage) {
+        setSelectedMessage(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedMessage]);
+
   return (
     <div className="space-y-4">
       {/* ── Controls bar: two distinct modes ── */}
@@ -317,6 +328,7 @@ export function MessagesTab({ topicName }: MessagesTabProps) {
         onToggleAll={toggleSelectAll}
         onDeleteBefore={!isReadOnly && !liveTailActive ? handleDeleteBefore : undefined}
         onDeleteBeforeTimestamp={!isReadOnly && !liveTailActive ? handleDeleteBeforeTimestamp : undefined}
+        isLoading={isFetching && fetchedMessages.length === 0}
       />
 
       {selectedMessage && (

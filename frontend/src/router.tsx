@@ -65,8 +65,8 @@ function AppShell() {
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <AppHeader />
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-[1280px] mx-auto">
+        <main className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="w-full max-w-[1720px] mx-auto">
             <Outlet />
           </div>
         </main>

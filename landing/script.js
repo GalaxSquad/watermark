@@ -33,30 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =========================================================================
-     2. Cursor Blob Effect
-     ========================================================================= */
-  const cursorBlob = document.getElementById("cursorBlob");
-
-  if (cursorBlob) {
-    let blobVisible = false;
-
-    document.addEventListener("mousemove", (e) => {
-      if (!blobVisible) {
-        cursorBlob.style.opacity = "0.12";
-        blobVisible = true;
-      }
-      cursorBlob.style.left = e.clientX + "px";
-      cursorBlob.style.top = e.clientY + window.scrollY + "px";
-    });
-
-    document.addEventListener("mouseleave", () => {
-      cursorBlob.style.opacity = "0";
-      blobVisible = false;
-    });
-  }
-
-  /* =========================================================================
-     3. Navbar Background on Scroll
+     2. Navbar Background on Scroll
      ========================================================================= */
   const navbar = document.querySelector(".navbar");
 

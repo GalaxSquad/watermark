@@ -24,7 +24,7 @@ interface ConsumerGroupTableProps {
 }
 
 export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroupTableProps) {
-  const { data: groups = [] } = useKafkaQuery(["consumer-groups"], GetConsumerGroups);
+  const { data: groups = [], isLoading } = useKafkaQuery(["consumer-groups"], GetConsumerGroups);
   const { alerts } = useLagAlertsStore();
 
   const columns = useMemo<ColumnDef<ConsumerGroup, unknown>[]>(() => [
@@ -66,6 +66,7 @@ export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroup
     <DataTable
       data={groups}
       columns={columns}
+      isLoading={isLoading}
       onRowClick={(row) => onGroupClick(row.groupId)}
       globalFilter={searchFilter}
     />

@@ -80,7 +80,7 @@ export function ServiceNameInput({
           className={cn(
             "flex flex-wrap gap-1.5 items-center min-h-[38px] px-2.5 py-1.5",
             "bg-secondary border border-border rounded-lg",
-            "transition-all duration-200",
+            "transition-[color,background-color,border-color,box-shadow] duration-150",
             "focus-within:ring-1",
             styles.ring
           )}
@@ -91,7 +91,7 @@ export function ServiceNameInput({
               key={name}
               className={cn(
                 "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono rounded-md border",
-                "transition-all duration-150 hover:scale-105",
+                "transition-transform duration-150 ease-out hover:scale-[1.03]",
                 styles.badge
               )}
             >

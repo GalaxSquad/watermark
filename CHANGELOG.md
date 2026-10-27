@@ -3,6 +3,32 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.5] - 2026-10-28
+
+### Added
+
+- Skeleton loading indicators for data tables and message viewers during data fetching
+- Tactile press feedback (`active:scale-[0.98]`) across buttons and controls
+- Keyboard navigation: ArrowUp/ArrowDown for message rows, Escape to close inspector
+- OS-aware command shortcut indicator (`⌘K` on macOS, `Ctrl+K` on Windows/Linux)
+- Geist variable typography across frontend application and landing page
+
+### Changed
+
+- Expanded desktop shell max width to 1720px for high data-density Kafka workflows
+- Compact header height reduced from 64px to 48px to maximize screen real estate
+- Calibrated dark mode semantic color tokens for balanced contrast
+- Standardized message table pagination (20, 50, 100, 250) with auto-hiding when single-page
+- Tabular numeric alignment (`tabular-nums`) for offsets, partitions, and lag counters
+- Messages filter bar reorganized into distinct query filter and action control clusters
+- Polished landing page with ambient glow and subtle grid pattern
+
+### Fixed
+
+- Responsive header overflow: topic and consumer group titles now wrap cleanly without pushing action buttons off-screen
+- Radix UI animation origin classes compatibility with Tailwind CSS v3.4
+- Eliminated imprecise `transition-all` declarations in favor of explicit transitions
+
 ## [1.1.4] - 2026-09-09
 
 ### Changed
