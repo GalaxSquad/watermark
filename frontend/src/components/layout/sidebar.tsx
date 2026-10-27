@@ -74,7 +74,7 @@ export function Sidebar() {
                 key={item.id}
                 onClick={() => navigate({ to: item.path })}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 w-full text-left",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ease-out active:scale-[0.99] active:duration-75 w-full text-left",
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"

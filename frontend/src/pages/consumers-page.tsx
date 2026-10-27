@@ -10,7 +10,7 @@ export function ConsumersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
+      <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider">
         Consumer Groups
       </h1>
       <div className="flex items-center gap-4">

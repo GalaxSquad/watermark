@@ -62,8 +62,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ["Space Grotesk", "Inter", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        display: ["Space Grotesk", "Geist Variable", "Geist", "Inter", "sans-serif"],
+        body: ["Geist Variable", "Geist", "Inter", "sans-serif"],
+        sans: ["Geist Variable", "Geist", "Inter", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       borderRadius: {

@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { RowContextMenu, type RowContextMenuItem } from "@/components/shared/row-context-menu";
 
@@ -22,6 +23,7 @@ interface DataTableProps<T> {
   pageSize?: number;
   className?: string;
   getRowContextMenu?: (row: T) => RowContextMenuItem[];
+  isLoading?: boolean;
 }
 
 export function DataTable<T>({
@@ -33,6 +35,7 @@ export function DataTable<T>({
   pageSize = 50,
   className,
   getRowContextMenu,
+  isLoading = false,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -79,35 +82,64 @@ export function DataTable<T>({
             ))}
           </thead>
           <tbody className="divide-y divide-border">
-            {table.getRowModel().rows.map((row) => {
-              const highlight = highlightRow?.(row.original);
-              const contextItems = getRowContextMenu?.(row.original) ?? [];
-              const tr = (
-                <tr
-                  key={row.id}
-                  className={cn(
-                    "transition-colors duration-150",
-                    onRowClick && "cursor-pointer hover:bg-secondary",
-                    highlight
-                  )}
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-3 text-sm text-foreground font-mono"
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, rIdx) => (
+                <tr key={`skeleton-${rIdx}`}>
+                  {columns.map((_, cIdx) => (
+                    <td key={`skeleton-cell-${cIdx}`} className="px-4 py-3.5">
+                      <Skeleton className={cn("h-4", cIdx === 0 ? "w-2/3" : "w-1/2")} />
                     </td>
                   ))}
                 </tr>
-              );
-              return contextItems.length > 0 ? (
-                <RowContextMenu key={row.id} items={contextItems}>
-                  {tr}
-                </RowContextMenu>
-              ) : tr;
-            })}
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-12 text-center text-sm text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Icon name="layers" tone="muted" className="size-8 opacity-40" />
+                    <span className="font-medium font-sans">No records found</span>
+                    {globalFilter && (
+                      <span className="text-xs text-muted-foreground/70 font-sans">
+                        No results matching &ldquo;{globalFilter}&rdquo;
+                      </span>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => {
+                const highlight = highlightRow?.(row.original);
+                const contextItems = getRowContextMenu?.(row.original) ?? [];
+                const tr = (
+                  <tr
+                    key={row.id}
+                    className={cn(
+                      "transition-colors duration-150",
+                      onRowClick && "cursor-pointer hover:bg-secondary",
+                      highlight
+                    )}
+                    onClick={() => onRowClick?.(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3 text-sm text-foreground font-mono tabular-nums"
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                );
+                return contextItems.length > 0 ? (
+                  <RowContextMenu key={row.id} items={contextItems}>
+                    {tr}
+                  </RowContextMenu>
+                ) : tr;
+              })
+            )}
           </tbody>
         </table>
       </div>
@@ -115,7 +147,7 @@ export function DataTable<T>({
       {/* Pagination */}
       {table.getPageCount() > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground font-mono">
+          <span className="text-xs text-muted-foreground font-mono tabular-nums">
             Showing {table.getState().pagination.pageIndex * pageSize + 1}-
             {Math.min(
               (table.getState().pagination.pageIndex + 1) * pageSize,

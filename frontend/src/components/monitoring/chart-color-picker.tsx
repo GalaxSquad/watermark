@@ -18,7 +18,7 @@ export function ChartColorPicker({ currentIndex, entities, onSelect }: ChartColo
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="size-3 rounded-full shrink-0 cursor-pointer ring-1 ring-white/20 hover:ring-white/40 transition-all"
+          className="size-3 rounded-full shrink-0 cursor-pointer ring-1 ring-white/20 hover:ring-white/40 transition-[box-shadow,transform] duration-150 active:scale-90"
           style={{ backgroundColor: CHART_COLORS[currentIndex] }}
         />
       </PopoverTrigger>
@@ -36,7 +36,7 @@ export function ChartColorPicker({ currentIndex, entities, onSelect }: ChartColo
                 key={i}
                 onClick={() => onSelect(i)}
                 className={cn(
-                  "size-5 rounded-full transition-all flex items-center justify-center text-[8px] font-bold",
+                  "size-5 rounded-full transition-[box-shadow,transform] duration-150 ease-out active:scale-90 flex items-center justify-center text-[8px] font-bold",
                   isCurrent && "ring-2 ring-white ring-offset-1 ring-offset-[#0f1115]",
                 )}
                 style={{ backgroundColor: color }}

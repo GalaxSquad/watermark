@@ -9,11 +9,13 @@ export function SchemasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider min-w-0">
           Schema Registry
         </h1>
-        <RefreshButton queryKeys={[["schema-subjects"]]} />
+        <div className="shrink-0">
+          <RefreshButton queryKeys={[["schema-subjects"]]} />
+        </div>
       </div>
 
       <div className="grid grid-cols-[280px_1fr] gap-4 h-[calc(100vh-240px)]">

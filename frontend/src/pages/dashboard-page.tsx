@@ -4,11 +4,13 @@ import { RefreshButton } from "@/components/shared/refresh-button";
 export function DashboardPage() {
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider min-w-0">
           Cluster Overview
         </h1>
-        <RefreshButton queryKeys={[["dashboard"]]} />
+        <div className="shrink-0">
+          <RefreshButton queryKeys={[["dashboard"]]} />
+        </div>
       </div>
       <DashboardMetricCards />
       <BrokerTable />

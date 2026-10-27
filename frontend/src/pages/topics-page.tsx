@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/shared/search-input";
@@ -60,18 +61,19 @@ export function TopicsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider min-w-0">
           Topics
         </h1>
         {!isReadOnly && (
-          <button
+          <Button
             onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+            size="sm"
+            className="gap-1.5 shrink-0"
           >
             <Icon name="plus" className="size-3.5" />
             Create Topic
-          </button>
+          </Button>
         )}
       </div>
 

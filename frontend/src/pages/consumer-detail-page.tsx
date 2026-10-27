@@ -72,11 +72,16 @@ export function ConsumerDetailPage() {
         <Icon name="chevron-left" className="size-4" />
         Consumer Groups
       </button>
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-mono font-bold uppercase tracking-wider">
-          Consumer Group: <span className="text-primary">{groupId}</span>
-        </h1>
-        <div className="flex gap-2">
+      <div className="flex items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1.5 min-w-0 flex-1">
+          <span className="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider block">
+            Consumer Group
+          </span>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight text-foreground break-all" title={groupId}>
+            {groupId}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           <RefreshButton queryKeys={[["consumer-group-detail", groupId]]} />
           {!isReadOnly && (
             <ConsumerActionDropdown

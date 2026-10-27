@@ -75,7 +75,7 @@ export function UpdateBanner() {
     <>
       <div className="mx-3 mb-3">
         <div className={cn(
-          "relative rounded-xl border px-3.5 py-3 transition-all duration-300",
+          "relative rounded-xl border px-3.5 py-3 transition-[opacity,border-color,background-color] duration-200 ease-out",
           "bg-primary/10 border-primary/20"
         )}>
           <button

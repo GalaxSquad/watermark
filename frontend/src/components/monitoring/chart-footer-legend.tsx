@@ -51,7 +51,7 @@ function ChartEntityChip({
       </button>
       <button
         onClick={() => onRemove(entity.name)}
-        className="opacity-0 group-hover:opacity-100 ml-1 text-muted-foreground hover:text-red-400 transition-all"
+        className="opacity-0 group-hover:opacity-100 ml-1 text-muted-foreground hover:text-red-400 transition-[opacity,color] duration-150"
         title="Remove"
       >
         <Icon name="x" className="size-3" tone="muted" />
