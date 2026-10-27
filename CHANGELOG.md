@@ -3,7 +3,7 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.2.0] - 2026-10-28
+## [1.1.5] - 2026-10-28
 
 ### Added
 
