@@ -112,9 +112,9 @@ export function DeleteRecordsDialog({ mode, onClose, onSuccess }: DeleteRecordsD
     <AlertDialog open={!!mode} onOpenChange={(open) => { if (!open) onClose(); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-red-400">
-            <Icon name="alert-triangle" className="size-4" tone="danger" />
-            {title}
+          <AlertDialogTitle className="flex items-start gap-2 text-red-400">
+            <Icon name="alert-triangle" className="size-4 shrink-0 mt-0.5" tone="danger" />
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">{title}</span>
           </AlertDialogTitle>
           <AlertDialogDescription className="text-foreground">
             {description}
