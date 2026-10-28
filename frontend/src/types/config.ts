@@ -4,7 +4,7 @@
  * Re-exports Wails-generated model classes as the canonical types.
  */
 
-import { config } from "../../wailsjs/go/models";
+import * as config from "../../bindings/watermark-01/internal/config/models";
 
 export type ClusterProfile = config.ClusterProfile;
 export type AppSettings = config.AppSettings;

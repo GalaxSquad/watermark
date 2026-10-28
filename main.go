@@ -11,9 +11,7 @@ import (
 	"watermark-01/internal/templates"
 	"watermark-01/internal/updater"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // version is injected at build time via: -ldflags "-X main.version=vX.Y.Z"
@@ -21,6 +19,14 @@ var version = "dev"
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+func init() {
+	application.RegisterEvent[kafka.Message]("liveTail:message")
+	application.RegisterEvent[string]("liveTail:error")
+	application.RegisterEvent[lagalert.LagAlertPayload]("lag:alert")
+	application.RegisterEvent[updater.UpdateStatus]("update:progress")
+	application.RegisterEvent[updater.UpdateInfo]("update:available")
+}
 
 func main() {
 	// Initialize config service (loads key + config from ~/.watermark/)
@@ -48,31 +54,38 @@ func main() {
 		return
 	}
 
-	app := NewApp(configSvc, kafkaSvc, schemaSvc, annotationSvc, updaterSvc, lagAlertSvc, templateSvc)
+	lifecycleApp := NewApp(configSvc, kafkaSvc, schemaSvc, annotationSvc, updaterSvc, lagAlertSvc, templateSvc)
 
-	err = wails.Run(&options.App{
-		Title:  "Watermark",
-		Width:  1280,
-		Height: 800,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
+	app := application.New(application.Options{
+		Name:        "Watermark",
+		Description: "Kafka Desktop Client",
+		Services: []application.Service{
+			application.NewService(lifecycleApp),
+			application.NewService(configSvc),
+			application.NewService(kafkaSvc),
+			application.NewService(schemaSvc),
+			application.NewService(annotationSvc),
+			application.NewService(updaterSvc),
+			application.NewService(lagAlertSvc),
+			application.NewService(templateSvc),
 		},
-		BackgroundColour: &options.RGBA{R: 10, G: 10, B: 15, A: 1},
-		OnStartup:        app.startup,
-		OnShutdown:       app.shutdown,
-		Bind: []interface{}{
-			app,
-			configSvc,
-			kafkaSvc,
-			schemaSvc,
-			annotationSvc,
-			updaterSvc,
-			lagAlertSvc,
-			templateSvc,
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
+		},
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
 
-	if err != nil {
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            "Watermark",
+		Width:            1280,
+		Height:           800,
+		BackgroundColour: application.NewRGBA(10, 10, 15, 255),
+		URL:              "/",
+	})
+
+	if err := app.Run(); err != nil {
 		println("Error:", err.Error())
 	}
 }

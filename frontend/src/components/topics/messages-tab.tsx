@@ -4,7 +4,7 @@ import type { Message, StartPosition, MessageFormat } from "@/types/kafka";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ConsumeMessages, ConsumeMessagesFromTimestamp, StartLiveTail, StopLiveTail } from "@/lib/wails-client";
-import { EventsOn } from "../../../wailsjs/runtime/runtime";
+import { Events } from "@wailsio/runtime";
 import { MessagesTable } from "./messages-table";
 import { MessageInspector } from "./message-inspector";
 import { MessagesFilterBar } from "./messages-filter-bar";
@@ -181,15 +181,16 @@ export function MessagesTab({ topicName }: MessagesTabProps) {
   useEffect(() => {
     if (!liveTailActive) return;
 
-    const cancelMessage = EventsOn("liveTail:message", (msg: Message) => {
+    const cancelMessage = Events.On("liveTail:message", (ev) => {
+      const msg = ev.data as Message;
       setLiveTailMessages((prev) => {
         const next = [msg, ...prev];
         return next.length > LIVE_TAIL_MAX_MESSAGES ? next.slice(0, LIVE_TAIL_MAX_MESSAGES) : next;
       });
     });
 
-    const cancelError = EventsOn("liveTail:error", (errMsg: string) => {
-      console.error("[LiveTail] error:", errMsg);
+    const cancelError = Events.On("liveTail:error", (ev) => {
+      console.error("[LiveTail] error:", ev.data);
     });
 
     return () => {

@@ -5,13 +5,17 @@
  * This ensures frontend components and Wails bindings use the same types.
  */
 
-import { kafka, schema } from "../../wailsjs/go/models";
+import * as kafka from "../../bindings/watermark-01/internal/kafka/models";
+import * as schema from "../../bindings/watermark-01/internal/schema/models";
 
 // Re-export kafka namespace types as top-level
 export type Broker = kafka.Broker;
 export type Topic = kafka.Topic;
 export type Partition = kafka.Partition;
 export type Message = kafka.Message;
+export type ProduceResult = kafka.ProduceResult;
+export type ProduceMessageRequest = kafka.ProduceMessageRequest;
+export type DeleteRecordsResult = kafka.DeleteRecordsResult;
 export type ConsumerGroup = kafka.ConsumerGroup;
 export type ConsumerGroupDetail = kafka.ConsumerGroupDetail;
 export type ConsumerGroupMember = kafka.ConsumerGroupMember;

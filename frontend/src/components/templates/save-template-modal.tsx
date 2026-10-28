@@ -32,7 +32,7 @@ interface SaveTemplateModalProps {
   partitions: number;
   replicationFactor: number;
   /** Pre-populated config map for edit mode (from Settings panel) */
-  initialConfigMap?: Record<string, string>;
+  initialConfigMap?: Record<string, string | undefined>;
   /** Pre-populated metadata for edit mode */
   initialName?: string;
   initialDescription?: string;
@@ -50,13 +50,13 @@ function suggestPattern(topicName: string): string {
 /** Convert TopicConfig[] or Record<string, string> into editable rows */
 function buildInitialRows(
   configs: TopicConfig[],
-  initialConfigMap?: Record<string, string>,
+  initialConfigMap?: Record<string, string | undefined>,
 ): ConfigRow[] {
   // Prefer initialConfigMap (edit mode from Settings), fall back to TopicConfig[]
   if (initialConfigMap && Object.keys(initialConfigMap).length > 0) {
     return Object.entries(initialConfigMap).map(([key, value]) => ({
       key,
-      value,
+      value: value ?? "",
     }));
   }
 

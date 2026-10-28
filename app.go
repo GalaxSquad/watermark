@@ -10,6 +10,8 @@ import (
 	"watermark-01/internal/schema"
 	"watermark-01/internal/templates"
 	"watermark-01/internal/updater"
+
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // App struct holds references to all services and the Wails runtime context.
@@ -29,8 +31,8 @@ func NewApp(c *config.ConfigService, k *kafka.KafkaService, s *schema.SchemaServ
 	return &App{configSvc: c, kafkaSvc: k, schemaSvc: s, annotationSvc: a, updaterSvc: u, lagAlertSvc: l, templateSvc: t}
 }
 
-// startup is called when the Wails app starts. Passes context to services.
-func (a *App) startup(ctx context.Context) {
+// ServiceStartup is called when the Wails v3 app starts. Passes context to services.
+func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) error {
 	a.ctx = ctx
 	a.kafkaSvc.SetContext(ctx)
 	a.schemaSvc.SetContext(ctx)
@@ -52,10 +54,12 @@ func (a *App) startup(ctx context.Context) {
 
 	// Start periodic update checks in the background
 	go a.updaterSvc.StartPeriodicCheck()
+	return nil
 }
 
-// shutdown is called when the Wails app is closing. Cleans up connections.
-func (a *App) shutdown(ctx context.Context) {
+// ServiceShutdown is called when the Wails v3 app is closing. Cleans up connections.
+func (a *App) ServiceShutdown() error {
 	a.lagAlertSvc.Stop()
-	a.kafkaSvc.Disconnect()
+	_ = a.kafkaSvc.DisconnectAll()
+	return nil
 }

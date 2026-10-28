@@ -14,7 +14,7 @@ import (
 	"watermark-01/internal/config"
 
 	"github.com/creativeprojects/go-selfupdate"
-	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 const (
@@ -135,14 +135,10 @@ func (u *UpdaterService) CheckForUpdate() UpdateInfo {
 // ApplyUpdate downloads and applies the latest update.
 // Emits "update:progress" Wails events during the process.
 func (u *UpdaterService) ApplyUpdate() error {
-	u.mu.RLock()
-	ctx := u.ctx
-	u.mu.RUnlock()
-
 	// Emit progress helper
 	emit := func(phase string, progress float64, errMsg string) {
-		if ctx != nil {
-			wailsRuntime.EventsEmit(ctx, "update:progress", UpdateStatus{
+		if app := application.Get(); app != nil {
+			app.Event.Emit("update:progress", UpdateStatus{
 				Phase:    phase,
 				Progress: progress,
 				Error:    errMsg,
@@ -257,12 +253,8 @@ func (u *UpdaterService) checkAndEmit() {
 	info := u.CheckForUpdate()
 	// Suppress banner for skipped versions on auto-check
 	if info.Available && !info.Skipped {
-		u.mu.RLock()
-		ctx := u.ctx
-		u.mu.RUnlock()
-
-		if ctx != nil {
-			wailsRuntime.EventsEmit(ctx, "update:available", info)
+		if app := application.Get(); app != nil {
+			app.Event.Emit("update:available", info)
 			log.Printf("updater: new version available: %s → %s", info.CurrentVer, info.LatestVer)
 		}
 	}

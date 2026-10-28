@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { EventsOn } from "../../../wailsjs/runtime/runtime";
+import { Events } from "@wailsio/runtime";
 import { CheckForUpdate } from "@/lib/wails-client";
 import { UpdateChangelogModal } from "@/components/layout/update-changelog-modal";
 import type { UpdateInfo } from "@/components/layout/update-changelog-modal";
@@ -32,7 +32,8 @@ export function UpdateBanner() {
 
   // Listen for backend-pushed update events (periodic check)
   useEffect(() => {
-    const cancel = EventsOn("update:available", (info: UpdateInfo) => {
+    const cancel = Events.On("update:available", (ev) => {
+      const info = ev.data as UpdateInfo;
       // Auto-check: suppress banner for skipped versions
       if (info?.available && !info?.skipped) {
         setUpdateInfo(info);

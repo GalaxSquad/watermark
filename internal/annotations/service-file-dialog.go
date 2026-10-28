@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // ExportToFile opens a native Save dialog and writes annotations for a single cluster.
@@ -26,13 +26,13 @@ func (s *AnnotationService) ExportToFile(clusterID string) error {
 		return fmt.Errorf("export: marshal: %w", err)
 	}
 
-	path, err := wailsRuntime.SaveFileDialog(s.ctx, wailsRuntime.SaveDialogOptions{
-		Title:           "Export Annotations",
-		DefaultFilename: "watermark-annotations-cluster.json",
-		Filters: []wailsRuntime.FileFilter{
+	path, err := application.Get().Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
+		Title:    "Export Annotations",
+		Filename: "watermark-annotations-cluster.json",
+		Filters: []application.FileFilter{
 			{DisplayName: "JSON Files", Pattern: "*.json"},
 		},
-	})
+	}).PromptForSingleSelection()
 	if err != nil {
 		return fmt.Errorf("export: dialog: %w", err)
 	}
@@ -56,13 +56,13 @@ func (s *AnnotationService) ExportAllToFile() error {
 		return fmt.Errorf("export all: marshal: %w", err)
 	}
 
-	path, err := wailsRuntime.SaveFileDialog(s.ctx, wailsRuntime.SaveDialogOptions{
-		Title:           "Export All Annotations",
-		DefaultFilename: "watermark-annotations-all.json",
-		Filters: []wailsRuntime.FileFilter{
+	path, err := application.Get().Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
+		Title:    "Export All Annotations",
+		Filename: "watermark-annotations-all.json",
+		Filters: []application.FileFilter{
 			{DisplayName: "JSON Files", Pattern: "*.json"},
 		},
-	})
+	}).PromptForSingleSelection()
 	if err != nil {
 		return fmt.Errorf("export all: dialog: %w", err)
 	}
@@ -79,12 +79,12 @@ func (s *AnnotationService) ExportAllToFile() error {
 // ImportFromFile opens a native Open dialog and imports annotations from a JSON file
 // into the specified target cluster.
 func (s *AnnotationService) ImportFromFile(targetClusterID string, merge bool) error {
-	path, err := wailsRuntime.OpenFileDialog(s.ctx, wailsRuntime.OpenDialogOptions{
+	path, err := application.Get().Dialog.OpenFileWithOptions(&application.OpenFileDialogOptions{
 		Title: "Import Annotations",
-		Filters: []wailsRuntime.FileFilter{
+		Filters: []application.FileFilter{
 			{DisplayName: "JSON Files", Pattern: "*.json"},
 		},
-	})
+	}).PromptForSingleSelection()
 	if err != nil {
 		return fmt.Errorf("import: dialog: %w", err)
 	}

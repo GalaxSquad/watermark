@@ -8,8 +8,8 @@ import (
 
 	"watermark-01/internal/lagrecorder"
 
-	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 	"github.com/google/uuid"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // pollLoop runs the periodic lag check. Uses panic recovery like consumers.go.
@@ -184,19 +184,15 @@ func (s *LagAlertService) pollOnce(clusterID string) error {
 	}
 
 	// Emit Wails events
-	s.mu.Lock()
-	ctx := s.ctx
-	s.mu.Unlock()
-
-	if ctx != nil {
+	if app := application.Get(); app != nil {
 		if len(newAlerts) > 0 {
-			wailsRuntime.EventsEmit(ctx, "lag:alert", LagAlertPayload{
+			app.Event.Emit("lag:alert", LagAlertPayload{
 				Type:   "breach",
 				Alerts: newAlerts,
 			})
 		}
 		if len(recoveries) > 0 {
-			wailsRuntime.EventsEmit(ctx, "lag:alert", LagAlertPayload{
+			app.Event.Emit("lag:alert", LagAlertPayload{
 				Type:   "recovery",
 				Alerts: recoveries,
 			})

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ProduceMessage, ProduceMessages } from "@/lib/wails-client";
-import type { Message } from "@/types/kafka";
-import type { kafka } from "../../../wailsjs/go/models";
+import type { Message, ProduceResult } from "@/types/kafka";
 import { BatchReplayProgress } from "./batch-replay-progress";
 import {
   Dialog,
@@ -27,7 +26,7 @@ interface BatchState {
   total: number;
   completed: number;
   failed: number;
-  results: kafka.ProduceResult[];
+  results: ProduceResult[];
 }
 
 export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, batchReplaySource }: ProduceMessageModalProps) {
