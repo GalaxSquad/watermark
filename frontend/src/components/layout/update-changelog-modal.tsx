@@ -3,6 +3,7 @@ import { GetChangelog, ApplyUpdate, SkipVersion } from "@/lib/wails-client";
 import { renderChangelogMarkdown } from "@/lib/changelog-markdown-renderer";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,11 @@ interface UpdateChangelogModalProps {
 }
 
 const INITIAL_SHOW = 5;
+
+function formatVersion(ver?: string): string {
+  if (!ver) return "";
+  return `v${ver.replace(/^v+/, "")}`;
+}
 
 export function UpdateChangelogModal({ isOpen, onClose, updateInfo }: UpdateChangelogModalProps) {
   const [state, setState] = useState<ModalState>("loading");
@@ -92,17 +98,17 @@ export function UpdateChangelogModal({ isOpen, onClose, updateInfo }: UpdateChan
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[70vh]" showCloseButton={!isUpdating && state !== "success"}>
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" showCloseButton={!isUpdating && state !== "success"}>
+        <DialogHeader className="shrink-0">
           <div>
             <DialogTitle className="text-lg">Update Available</DialogTitle>
             <DialogDescription className="mt-0.5">
-              v{updateInfo.currentVersion} → v{updateInfo.latestVersion}
+              {formatVersion(updateInfo.currentVersion)} → {formatVersion(updateInfo.latestVersion)}
             </DialogDescription>
           </div>
         </DialogHeader>
 
-        <DialogBody>
+        <DialogBody className="min-h-0 flex-1 overflow-y-auto pr-1">
           {/* Loading */}
           {state === "loading" && (
             <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
@@ -127,7 +133,7 @@ export function UpdateChangelogModal({ isOpen, onClose, updateInfo }: UpdateChan
             <div className="flex items-center gap-2 py-6 justify-center">
               <Icon name="check-circle" tone="success" className="size-5" />
               <span className="text-sm font-medium text-emerald-400">
-                Updated to v{updateInfo.latestVersion} — Restart to apply
+                Updated to {formatVersion(updateInfo.latestVersion)} — Restart to apply
               </span>
             </div>
           )}
@@ -155,7 +161,7 @@ export function UpdateChangelogModal({ isOpen, onClose, updateInfo }: UpdateChan
                 <div key={note.version}>
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
-                      v{note.version}
+                      {formatVersion(note.version)}
                     </span>
                     <span className="text-[10px] text-muted-foreground">{note.date}</span>
                   </div>
@@ -177,27 +183,26 @@ export function UpdateChangelogModal({ isOpen, onClose, updateInfo }: UpdateChan
 
         {/* Footer */}
         {state !== "success" && (
-          <DialogFooter>
+          <DialogFooter className="shrink-0">
             {(state === "ready" || state === "update-error") && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleSkip}
                 disabled={isUpdating}
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors disabled:opacity-50"
               >
                 Skip This Version
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              size="sm"
               onClick={handleUpdate}
               disabled={isUpdating}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                "text-white bg-primary hover:bg-primary/90"
-              )}
+              className="gap-2"
             >
               {isUpdating && <Icon name="loader" className="size-3.5 animate-spin" />}
-              {isUpdating ? "Updating…" : `Update to v${updateInfo.latestVersion}`}
-            </button>
+              {isUpdating ? "Updating…" : `Update to ${formatVersion(updateInfo.latestVersion)}`}
+            </Button>
           </DialogFooter>
         )}
       </DialogContent>
