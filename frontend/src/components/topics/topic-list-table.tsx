@@ -1,6 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/shared/data-table";
+import { CopyableText } from "@/components/shared/copyable-text";
 import { formatBytes } from "@/lib/utils";
 import type { Topic } from "@/types/kafka";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
@@ -85,12 +86,18 @@ export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideI
         const ann = annotations[row.original.name];
         const producers = ann?.producers ?? [];
         const consumers = ann?.consumers ?? [];
+        const notes = ann?.notes ?? "";
         const hasOwnership = producers.length > 0 || consumers.length > 0;
+        const hasAnyAnnotation = hasOwnership || notes.length > 0;
 
         return (
-          <div className="flex flex-col gap-1">
-            <span className="text-foreground font-medium">{row.original.name}</span>
-            {hasOwnership && (
+          <div className="flex flex-col gap-1 min-w-0">
+            <CopyableText
+              value={row.original.name}
+              textClassName="text-foreground font-medium max-w-[440px]"
+              copyLabel="Copy Topic Name"
+            />
+            {hasAnyAnnotation && (
               <div
                 className="flex items-center gap-1 flex-wrap min-w-0 cursor-pointer"
                 onClick={(e) => {
@@ -98,17 +105,26 @@ export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideI
                   openEditor(row.original.name);
                 }}
               >
-                <OwnershipBadges
-                  producers={producers}
-                  consumers={[]}
-                  maxVisible={3}
-                />
-                <span className="text-[10px] text-muted-foreground mx-0.5">→</span>
-                <OwnershipBadges
-                  producers={[]}
-                  consumers={consumers}
-                  maxVisible={3}
-                />
+                {hasOwnership && (
+                  <>
+                    <OwnershipBadges
+                      producers={producers}
+                      consumers={[]}
+                      maxVisible={3}
+                    />
+                    <span className="text-[10px] text-muted-foreground mx-0.5">→</span>
+                    <OwnershipBadges
+                      producers={[]}
+                      consumers={consumers}
+                      maxVisible={3}
+                    />
+                  </>
+                )}
+                {notes && (
+                  <span className="text-[10px] text-muted-foreground font-mono italic">
+                    {hasOwnership ? `— ${notes}` : notes}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -157,7 +173,7 @@ export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideI
         globalFilter={searchFilter}
         getRowContextMenu={(topic) =>
           isReadOnly
-            ? []
+            ? [{ label: "Edit Tags", icon: "tag", onSelect: () => openEditor(topic.name) }]
             : [
                 { label: "Clone Topic", icon: "copy", onSelect: () => onCloneTopic(topic.name) },
                 { label: "Edit Tags", icon: "tag", onSelect: () => openEditor(topic.name) },

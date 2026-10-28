@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAnnotations } from "@/hooks/use-annotations";
 import { ServiceNameInput } from "./service-name-input";
-import { annotations } from "../../../wailsjs/go/models";
+import * as annotations from "../../../bindings/watermark-01/internal/annotations/models";
 import {
   Dialog,
   DialogContent,
@@ -33,21 +33,41 @@ export function AnnotationEditorModal({
 
   const [producers, setProducers] = useState<string[]>([]);
   const [consumers, setConsumers] = useState<string[]>([]);
+  const [pendingProducer, setPendingProducer] = useState("");
+  const [pendingConsumer, setPendingConsumer] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Sync form state when modal opens or annotation data changes
+  // Sync form state when modal opens for a topic
   useEffect(() => {
     if (open) {
       setProducers(existing?.producers ?? []);
       setConsumers(existing?.consumers ?? []);
+      setPendingProducer("");
+      setPendingConsumer("");
       setNotes(existing?.notes ?? "");
     }
-  }, [open, existing?.producers, existing?.consumers, existing?.notes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, topicName]);
+
+  const mergePending = (list: string[], pending: string): string[] => {
+    const extra = pending
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (extra.length === 0) return list;
+    const merged = [...list];
+    for (const item of extra) {
+      if (!merged.includes(item)) merged.push(item);
+    }
+    return merged;
+  };
 
   const handleSave = () => {
+    const finalProducers = mergePending(producers, pendingProducer);
+    const finalConsumers = mergePending(consumers, pendingConsumer);
     const ann = new annotations.TopicAnnotation({
-      producers,
-      consumers,
+      producers: finalProducers,
+      consumers: finalConsumers,
       notes: notes.trim(),
       updatedAt: "",
     });
@@ -88,8 +108,10 @@ export function AnnotationEditorModal({
             <ServiceNameInput
               value={producers}
               onChange={setProducers}
+              pendingInput={pendingProducer}
+              onPendingInputChange={setPendingProducer}
               suggestions={serviceNames}
-              placeholder="Type to add producer..."
+              placeholder="Type producer name and press Enter..."
               variant="producer"
             />
           </div>
@@ -102,8 +124,10 @@ export function AnnotationEditorModal({
             <ServiceNameInput
               value={consumers}
               onChange={setConsumers}
+              pendingInput={pendingConsumer}
+              onPendingInputChange={setPendingConsumer}
               suggestions={serviceNames}
-              placeholder="Type to add consumer..."
+              placeholder="Type consumer name and press Enter..."
               variant="consumer"
             />
           </div>

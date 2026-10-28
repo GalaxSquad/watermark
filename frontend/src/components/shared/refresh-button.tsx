@@ -135,6 +135,8 @@ export function RefreshButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          type="button"
+          aria-label={tooltipText}
           onClick={handleRefresh}
           disabled={isDisabled}
           className={cn(

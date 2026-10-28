@@ -6,6 +6,7 @@ import { ProduceMessageModal } from "@/components/topics/produce-message-modal";
 import { MessagesActionDropdown } from "@/components/topics/messages-action-dropdown";
 import { DeleteRecordsDialog, type DeleteMode } from "@/components/topics/delete-records-dialog";
 import { RefreshButton } from "@/components/shared/refresh-button";
+import { CopyableText } from "@/components/shared/copyable-text";
 import { TopicOwnershipHeader } from "@/components/annotations/topic-ownership-header";
 import { AnnotationEditorModal } from "@/components/annotations/annotation-editor-modal";
 import { useReadOnly } from "@/hooks/use-read-only";
@@ -48,8 +49,12 @@ export function TopicDetailPage() {
               onEdit={() => setEditorOpen(true)}
             />
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight text-foreground break-all" title={topicId}>
-            {topicId}
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight text-foreground min-w-0">
+            <CopyableText
+              value={topicId}
+              alwaysShowCopy
+              copyLabel="Copy Topic Name"
+            />
           </h1>
         </div>
         <div className="flex items-center gap-2 shrink-0">

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAnnotations } from "@/hooks/use-annotations";
 import { ServiceNameInput } from "./service-name-input";
 import { useAnnotationUIStore } from "@/store/annotations";
-import { annotations } from "../../../wailsjs/go/models";
+import * as annotations from "../../../bindings/watermark-01/internal/annotations/models";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +24,29 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
 
   const [producers, setProducers] = useState<string[]>([]);
   const [consumers, setConsumers] = useState<string[]>([]);
+  const [pendingProducer, setPendingProducer] = useState("");
+  const [pendingConsumer, setPendingConsumer] = useState("");
   const [mode, setMode] = useState<"merge" | "replace">("merge");
 
+  const mergePending = (list: string[], pending: string): string[] => {
+    const extra = pending
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (extra.length === 0) return list;
+    const merged = [...list];
+    for (const item of extra) {
+      if (!merged.includes(item)) merged.push(item);
+    }
+    return merged;
+  };
+
   const handleApply = () => {
+    const finalProducers = mergePending(producers, pendingProducer);
+    const finalConsumers = mergePending(consumers, pendingConsumer);
     const ann = new annotations.TopicAnnotation({
-      producers,
-      consumers,
+      producers: finalProducers,
+      consumers: finalConsumers,
       notes: "",
       updatedAt: "",
     });
@@ -40,6 +57,8 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
           clearSelectedTopics();
           setProducers([]);
           setConsumers([]);
+          setPendingProducer("");
+          setPendingConsumer("");
           onClose();
         },
       }
@@ -47,6 +66,11 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
   };
 
   const isSaving = batchSetAnnotation.isPending;
+  const hasAnyTag =
+    producers.length > 0 ||
+    consumers.length > 0 ||
+    pendingProducer.trim().length > 0 ||
+    pendingConsumer.trim().length > 0;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -103,8 +127,10 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
             <ServiceNameInput
               value={producers}
               onChange={setProducers}
+              pendingInput={pendingProducer}
+              onPendingInputChange={setPendingProducer}
               suggestions={serviceNames}
-              placeholder="Type to add producer..."
+              placeholder="Type producer name and press Enter..."
               variant="producer"
             />
           </div>
@@ -117,8 +143,10 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
             <ServiceNameInput
               value={consumers}
               onChange={setConsumers}
+              pendingInput={pendingConsumer}
+              onPendingInputChange={setPendingConsumer}
               suggestions={serviceNames}
-              placeholder="Type to add consumer..."
+              placeholder="Type consumer name and press Enter..."
               variant="consumer"
             />
           </div>
@@ -133,7 +161,7 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
           </button>
           <button
             onClick={handleApply}
-            disabled={isSaving || (producers.length === 0 && consumers.length === 0)}
+            disabled={isSaving || !hasAnyTag}
             className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
           >
             {isSaving ? "Applying..." : "Apply"}

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { LagMonitorTab } from "./lag-monitor-tab";
 import { LagRankingTab } from "./lag-ranking-tab";
@@ -17,10 +17,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 export function MonitoringPage() {
   const { activeClusterId } = useSettingsStore();
   const { loadConfig, alerts } = useLagAlertsStore();
+  const [configOpen, setConfigOpen] = useState(false);
   const prefs = useAlertRefreshPrefs();
   const { secondsLeft, refresh } = useRefreshCountdown(
     prefs.intervalMs,
@@ -36,7 +42,7 @@ export function MonitoringPage() {
   const unreadAlertsCount = alerts.filter((a) => !a.read).length;
 
   return (
-    <div className="h-[calc(100vh-128px)] flex flex-col">
+    <div className="min-h-[calc(100vh-128px)] flex flex-col">
       <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider min-w-0">
           Monitoring
@@ -52,20 +58,26 @@ export function MonitoringPage() {
           />
 
           <Dialog>
-            <DialogTrigger asChild>
-              <button
-                className="relative p-1.5 text-muted-foreground hover:text-foreground rounded border border-border bg-secondary hover:bg-secondary transition-colors"
-                title="Alert History"
-              >
-                <Icon name="bell" className="size-3.5" />
-                {unreadAlertsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-3 min-w-[12px] items-center justify-center rounded-full bg-semantic-red px-1 text-[8px] font-bold text-white leading-none">
-                    {unreadAlertsCount}
-                  </span>
-                )}
-              </button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-4xl bg-card border border-border p-6 flex flex-col gap-4 max-h-[85vh]">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Alert Notifications"
+                    className="relative p-1.5 text-muted-foreground hover:text-foreground rounded border border-border bg-secondary hover:bg-accent transition-colors"
+                  >
+                    <Icon name="bell" className="size-3.5" />
+                    {unreadAlertsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-3 min-w-[12px] items-center justify-center rounded-full bg-semantic-red px-1 text-[8px] font-bold text-white leading-none">
+                        {unreadAlertsCount}
+                      </span>
+                    )}
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Alert Notifications</TooltipContent>
+            </Tooltip>
+            <DialogContent className="max-w-4xl bg-card border border-border p-6 flex flex-col gap-4 max-h-[85vh]">
               <DialogHeader className="border-b border-border pb-4 shrink-0 -mx-6 px-6 -mt-2">
                 <DialogTitle className="text-lg font-bold flex items-center gap-2">
                   <Icon name="bell" className="size-5" tone="muted" />
@@ -78,16 +90,22 @@ export function MonitoringPage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded border border-border bg-secondary hover:bg-secondary transition-colors"
-                title="Monitoring Configuration"
-              >
-                <Icon name="settings" className="size-3.5" />
-              </button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl bg-card border border-border p-6 flex flex-col gap-4 max-h-[85vh]">
+          <Dialog open={configOpen} onOpenChange={setConfigOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Monitoring Configuration"
+                    className="p-1.5 text-muted-foreground hover:text-foreground rounded border border-border bg-secondary hover:bg-accent transition-colors"
+                  >
+                    <Icon name="settings" className="size-3.5" />
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Monitoring Configuration</TooltipContent>
+            </Tooltip>
+            <DialogContent className="max-w-2xl bg-card border border-border p-6 flex flex-col gap-4 max-h-[85vh]">
               <DialogHeader className="border-b border-border pb-4 shrink-0 -mx-6 px-6 -mt-2">
                 <DialogTitle className="text-lg font-bold">Monitoring Configuration</DialogTitle>
               </DialogHeader>
@@ -100,9 +118,9 @@ export function MonitoringPage() {
       </div>
 
       <div className="flex-1 min-h-0">
-        <div className="flex flex-col gap-5 h-full min-h-0">
-          {/* Top Section: The split Rankings (Top 5 limits) */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 shrink-0 z-10">
+        <div className="flex flex-col gap-6 h-full min-h-0">
+          {/* Top Section: Split Rankings (stacks below 1280px, side-by-side with fixed table layout above 1280px) */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 shrink-0 z-10">
             <LagMonitorTab />
             <LagRankingTab />
           </div>
@@ -113,7 +131,7 @@ export function MonitoringPage() {
               <Icon name="bar-chart" className="size-4" tone="brand" />
               Lag Visualization
             </h2>
-            <LagChartsTab />
+            <LagChartsTab onOpenConfig={() => setConfigOpen(true)} />
           </div>
         </div>
       </div>

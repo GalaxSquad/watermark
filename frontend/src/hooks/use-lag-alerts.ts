@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { EventsOn } from "../../wailsjs/runtime/runtime";
+import { Events } from "@wailsio/runtime";
 import { useLagAlertsStore } from "@/store/lag-alerts";
 import type { LagAlertPayload } from "@/types/lag-alerts";
 
@@ -24,7 +24,8 @@ export function useLagAlerts(clusterID: string | null) {
   useEffect(() => {
     if (!clusterID) return;
 
-    const handler = (payload: LagAlertPayload) => {
+    const off = Events.On("lag:alert", (ev) => {
+      const payload = ev.data as LagAlertPayload;
       if (!payload?.alerts?.length) return;
 
       if (payload.type === "breach") {
@@ -41,9 +42,7 @@ export function useLagAlerts(clusterID: string | null) {
       } else if (payload.type === "recovery") {
         markResolved(payload.alerts.map((a) => a.id));
       }
-    };
-
-    const off = EventsOn("lag:alert", handler);
+    });
     return () => {
       off();
     };

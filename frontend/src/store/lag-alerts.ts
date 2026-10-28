@@ -13,6 +13,8 @@ interface LagAlertsState {
   alerts: AlertEvent[];
   unreadCount: number;
   alertConfig: ClusterAlertConfig | null;
+  configLoading: boolean;
+  configLoaded: boolean;
 
   // Actions
   addAlerts: (incoming: AlertEvent[]) => void;
@@ -24,10 +26,12 @@ interface LagAlertsState {
   reset: () => void;
 }
 
-export const useLagAlertsStore = create<LagAlertsState>((set, get) => ({
+export const useLagAlertsStore = create<LagAlertsState>((set) => ({
   alerts: [],
   unreadCount: 0,
   alertConfig: null,
+  configLoading: false,
+  configLoaded: false,
 
   addAlerts: (incoming) => {
     set((s) => {
@@ -79,11 +83,20 @@ export const useLagAlertsStore = create<LagAlertsState>((set, get) => ({
   },
 
   loadConfig: async (clusterID) => {
+    set({ configLoading: true });
     try {
       const config = await GetAlertConfig(clusterID);
-      set({ alertConfig: config as ClusterAlertConfig });
+      set({
+        alertConfig: (config as ClusterAlertConfig) ?? null,
+        configLoading: false,
+        configLoaded: true,
+      });
     } catch {
-      set({ alertConfig: null });
+      set({
+        alertConfig: null,
+        configLoading: false,
+        configLoaded: true,
+      });
     }
   },
 
@@ -92,6 +105,8 @@ export const useLagAlertsStore = create<LagAlertsState>((set, get) => ({
       alerts: [],
       unreadCount: 0,
       alertConfig: null,
+      configLoading: false,
+      configLoaded: false,
     }),
 }));
 
