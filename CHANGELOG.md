@@ -3,6 +3,14 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.6] - 2026-10-28
+
+### Fixed
+
+- Enable smooth vertical scrolling inside update changelog modal
+- Pin action footer buttons to ensure visibility on long release notes
+- Clean up duplicate 'v' prefix in version comparison display
+
 ## [1.1.5] - 2026-10-28
 
 ### Changed
