@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -78,7 +78,9 @@ func (k *KafkaService) StartLiveTail(topicName string) error {
 				return // context cancelled
 			}
 			if errs := fetches.Errors(); len(errs) > 0 {
-				wailsRuntime.EventsEmit(ctx, "liveTail:error", errs[0].Err.Error())
+				if app := application.Get(); app != nil {
+					app.Event.Emit("liveTail:error", errs[0].Err.Error())
+				}
 				time.Sleep(time.Second)
 				continue
 			}
@@ -96,7 +98,9 @@ func (k *KafkaService) StartLiveTail(topicName string) error {
 					Value:     string(r.Value),
 					Headers:   headers,
 				}
-				wailsRuntime.EventsEmit(ctx, "liveTail:message", msg)
+				if app := application.Get(); app != nil {
+					app.Event.Emit("liveTail:message", msg)
+				}
 			})
 		}
 	}()

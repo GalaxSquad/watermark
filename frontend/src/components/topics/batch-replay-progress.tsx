@@ -1,9 +1,7 @@
 import { Icon } from "@/components/ui/icon";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import type { kafka } from "../../../wailsjs/go/models";
-
-type ProduceResult = kafka.ProduceResult;
+import type { ProduceResult } from "@/types/kafka";
 
 interface BatchReplayProgressProps {
   total: number;

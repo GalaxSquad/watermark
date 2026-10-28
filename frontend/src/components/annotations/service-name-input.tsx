@@ -13,6 +13,8 @@ interface ServiceNameInputProps {
   suggestions: string[];
   placeholder: string;
   variant: "producer" | "consumer";
+  pendingInput?: string;
+  onPendingInputChange?: (input: string) => void;
 }
 
 const VARIANT_STYLES = {
@@ -34,8 +36,21 @@ export function ServiceNameInput({
   suggestions,
   placeholder,
   variant,
+  pendingInput,
+  onPendingInputChange,
 }: ServiceNameInputProps) {
-  const [input, setInput] = useState("");
+  const [internalInput, setInternalInput] = useState("");
+  const input = pendingInput !== undefined ? pendingInput : internalInput;
+  const setInput = useCallback(
+    (next: string) => {
+      if (onPendingInputChange) {
+        onPendingInputChange(next);
+      } else {
+        setInternalInput(next);
+      }
+    },
+    [onPendingInputChange]
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const styles = VARIANT_STYLES[variant];
@@ -47,27 +62,51 @@ export function ServiceNameInput({
       s.toLowerCase().includes(input.toLowerCase())
   );
 
-  const addName = useCallback((name: string) => {
-    const trimmed = name.trim();
-    if (trimmed && !value.includes(trimmed)) {
-      onChange([...value, trimmed]);
+  const addName = useCallback((name: string, refocus = true) => {
+    const parts = name
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length > 0) {
+      const next = [...value];
+      for (const part of parts) {
+        if (!next.includes(part)) {
+          next.push(part);
+        }
+      }
+      if (next.length !== value.length) {
+        onChange(next);
+      }
     }
     setInput("");
     setShowSuggestions(false);
-    inputRef.current?.focus();
-  }, [value, onChange]);
+    if (refocus) {
+      inputRef.current?.focus();
+    }
+  }, [value, onChange, setInput]);
 
   const removeName = (name: string) => {
     onChange(value.filter((n) => n !== name));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && input.trim()) {
+    if ((e.key === "Enter" || e.key === ",") && input.trim()) {
       e.preventDefault();
       addName(input);
     }
+    if (e.key === "Tab" && input.trim()) {
+      addName(input, false);
+    }
     if (e.key === "Backspace" && !input && value.length > 0) {
       removeName(value[value.length - 1]);
+    }
+  };
+
+  const handleBlur = () => {
+    if (input.trim()) {
+      addName(input, false);
+    } else {
+      setShowSuggestions(false);
     }
   };
 
@@ -118,6 +157,7 @@ export function ServiceNameInput({
               setShowSuggestions(true);
             }}
             onFocus={() => setShowSuggestions(true)}
+            onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             placeholder={value.length === 0 ? placeholder : "Add..."}
             className="flex-1 min-w-[120px] bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none font-mono"
@@ -137,7 +177,10 @@ export function ServiceNameInput({
           <button
             key={suggestion}
             type="button"
-            onClick={() => addName(suggestion)}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              addName(suggestion);
+            }}
             className="w-full px-3 py-1.5 text-left text-sm text-foreground font-mono hover:bg-accent rounded transition-colors"
           >
             {suggestion}

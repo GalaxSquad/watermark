@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import logoImg from "@/assets/logo.svg";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export function Sidebar() {
-  const location = useLocation();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { unreadCount, alerts } = useLagAlertsStore();
   const hasCritical = alerts.some(
@@ -39,8 +39,8 @@ export function Sidebar() {
   });
 
   const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
+    if (path === "/") return pathname === "/";
+    return pathname === path || pathname.startsWith(`${path}/`);
   };
 
   return (
@@ -58,30 +58,44 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-3 py-4" aria-label="Main navigation">
         <span className="px-3 mb-2 block text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-widest">
           Menu
         </span>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.path);
             const isMonitoringCritical = item.id === "monitoring" && hasCritical;
-            let tone: "brand" | "danger" | "default" = "default";
+            let tone: "brand" | "danger" | "muted" = "muted";
             if (active) tone = "brand";
             else if (isMonitoringCritical) tone = "danger";
             return (
               <button
                 key={item.id}
-                onClick={() => navigate({ to: item.path })}
+                type="button"
+                aria-current={active ? "page" : undefined}
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  navigate({ to: item.path });
+                }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ease-out active:scale-[0.99] active:duration-75 w-full text-left",
+                  "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm border transition-[color,background-color,border-color,transform] duration-150 ease-out active:scale-[0.99] active:duration-75 w-full text-left outline-none",
+                  "focus-visible:ring-2 focus-visible:ring-semantic-cyan/70 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
                   active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    ? "bg-primary/15 border-primary/30 text-primary font-semibold shadow-sm"
+                    : "border-transparent font-medium text-muted-foreground hover:text-foreground hover:bg-secondary"
                 )}
               >
-                <Icon name={item.icon} tone={tone} className="size-4" />
-                {item.label}
+                <Icon
+                  name={item.icon}
+                  tone={tone}
+                  weight={active ? "regular" : "thin"}
+                  className={cn(
+                    "size-4 shrink-0 transition-colors",
+                    !active && !isMonitoringCritical && "group-hover:text-foreground"
+                  )}
+                />
+                <span className="truncate">{item.label}</span>
                 {item.id === "monitoring" && unreadCount > 0 && (
                   <span className={cn(
                     "ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-semantic-red text-white text-[10px] font-bold",
@@ -91,7 +105,7 @@ export function Sidebar() {
                   </span>
                 )}
                 {active && item.id !== "monitoring" && (
-                  <span className="ml-auto size-1.5 rounded-full bg-primary" />
+                  <span className="ml-auto size-1.5 rounded-full bg-primary shrink-0" />
                 )}
               </button>
             );

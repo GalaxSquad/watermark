@@ -6,12 +6,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"golang.org/x/sync/errgroup"
 )
 
-// consumeFromOffsets creates a temporary consumer with the given per-partition
-// offsets and polls records. perPartition caps how many records are kept per
-// partition; totalCap is the hard ceiling across all partitions.
+// consumeFromOffsets attaches the requested topic/partition offsets to the
+// warm Kafka client, polls until all non-empty partitions reach their budget
+// or high watermark, and immediately purges the topic from consuming state.
 // Shared by ConsumeMessages and ConsumeMessagesFromTimestamp.
 func (k *KafkaService) consumeFromOffsets(
 	ctx context.Context,
@@ -21,19 +23,21 @@ func (k *KafkaService) consumeFromOffsets(
 	perPartition int,
 	totalCap int,
 ) ([]Message, error) {
-	offsets := map[string]map[int32]kgo.Offset{topicName: partOffsets}
-	consumerOpts := append(append([]kgo.Opt{}, k.baseOpts...), kgo.ConsumePartitions(offsets))
-
-	consumer, err := kgo.NewClient(consumerOpts...)
-	if err != nil {
-		return nil, fmt.Errorf("consume: new consumer: %w", err)
+	if len(partOffsets) == 0 {
+		return []Message{}, nil
 	}
-	defer consumer.Close()
+
+	k.browseMu.Lock()
+	defer k.browseMu.Unlock()
+
+	offsets := map[string]map[int32]kgo.Offset{topicName: partOffsets}
+	k.client.AddConsumePartitions(offsets)
+	defer k.client.PurgeTopicsFromConsuming(topicName)
 
 	messages := make([]Message, 0, totalCap)
 
-	// Safety timeout — should rarely be hit with end-offset tracking
-	pollCtx, pollCancel := context.WithTimeout(ctx, 5*time.Second)
+	// Safety timeout — warm client typically finishes in 1-2 poll cycles (<300ms)
+	pollCtx, pollCancel := context.WithTimeout(ctx, 3*time.Second)
 	defer pollCancel()
 
 	partitions := make([]int32, 0, len(partOffsets))
@@ -46,7 +50,7 @@ func (k *KafkaService) consumeFromOffsets(
 	fetchedFromPart := make(map[int32]int, len(partitions))
 
 	for len(messages) < totalCap {
-		fetches := consumer.PollFetches(pollCtx)
+		fetches := k.client.PollFetches(pollCtx)
 
 		if pollCtx.Err() != nil {
 			break
@@ -56,29 +60,47 @@ func (k *KafkaService) consumeFromOffsets(
 			return messages, fmt.Errorf("consume: poll: %v", errs[0].Err)
 		}
 
-		fetches.EachRecord(func(r *kgo.Record) {
-			// Drop records from partitions that already hit their budget
-			if fetchedFromPart[r.Partition] >= perPartition {
+		fetches.EachPartition(func(fp kgo.FetchTopicPartition) {
+			if fp.Topic != topicName {
 				return
 			}
-			if len(messages) >= totalCap {
+			// If broker returned an empty batch for this partition (e.g. compacted
+			// gap or transaction control markers at the tail), mark it exhausted
+			// immediately so we don't wait for pollCtx timeout.
+			if len(fp.Records) == 0 {
+				consumed[fp.Partition] = partEndOffsets[fp.Partition]
 				return
 			}
-			headers := make(map[string]string)
-			for _, h := range r.Headers {
-				headers[h.Key] = string(h.Value)
+
+			for _, r := range fp.Records {
+				if r.Offset+1 > consumed[r.Partition] {
+					consumed[r.Partition] = r.Offset + 1
+				}
+				// Drop records from partitions that already hit their budget
+				if fetchedFromPart[r.Partition] >= perPartition {
+					continue
+				}
+				if len(messages) >= totalCap {
+					continue
+				}
+				headers := make(map[string]string, len(r.Headers))
+				for _, h := range r.Headers {
+					headers[h.Key] = string(h.Value)
+				}
+				messages = append(messages, Message{
+					Partition: r.Partition,
+					Offset:    r.Offset,
+					Timestamp: r.Timestamp.UTC().Format(time.RFC3339),
+					Key:       string(r.Key),
+					Value:     string(r.Value),
+					Headers:   headers,
+				})
+				fetchedFromPart[r.Partition]++
 			}
-			messages = append(messages, Message{
-				Partition: r.Partition,
-				Offset:    r.Offset,
-				Timestamp: r.Timestamp.UTC().Format(time.RFC3339),
-				Key:       string(r.Key),
-				Value:     string(r.Value),
-				Headers:   headers,
-			})
-			fetchedFromPart[r.Partition]++
-			if r.Offset+1 > consumed[r.Partition] {
-				consumed[r.Partition] = r.Offset + 1
+
+			// Also respect broker's reported HighWatermark if lower than cached endOffset
+			if fp.HighWatermark >= 0 && consumed[fp.Partition] >= fp.HighWatermark {
+				consumed[fp.Partition] = partEndOffsets[fp.Partition]
 			}
 		})
 
@@ -114,27 +136,92 @@ func (k *KafkaService) ConsumeMessages(topicName string, partition int32, startO
 
 	ctx := k.getCtx()
 
-	partitions, err := k.resolvePartitions(ctx, topicName, partition)
-	if err != nil {
+	// Fetch start (low watermark) and end (high watermark) offsets in parallel.
+	// ListEndOffsets also gives us the full partition list for the topic,
+	// eliminating a separate ListTopics round-trip.
+	var startOffsets, endOffsets kadm.ListedOffsets
+	g, gCtx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		var err error
+		startOffsets, err = k.admin.ListStartOffsets(gCtx, topicName)
+		if err != nil {
+			return fmt.Errorf("consume: list start offsets: %w", err)
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		endOffsets, err = k.admin.ListEndOffsets(gCtx, topicName)
+		if err != nil {
+			return fmt.Errorf("consume: list end offsets: %w", err)
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
 		return nil, err
+	}
+
+	topicEndOffsets, ok := endOffsets[topicName]
+	if !ok || len(topicEndOffsets) == 0 {
+		return nil, ErrTopicNotFound
+	}
+
+	var partitions []int32
+	if partition >= 0 {
+		if _, exists := topicEndOffsets[partition]; !exists {
+			return nil, fmt.Errorf("consume: partition %d not found in topic %s", partition, topicName)
+		}
+		partitions = []int32{partition}
+	} else {
+		partitions = make([]int32, 0, len(topicEndOffsets))
+		for p := range topicEndOffsets {
+			if p >= 0 {
+				partitions = append(partitions, p)
+			}
+		}
 	}
 
 	perPartition, totalCap := clampedBudget(limit, len(partitions))
 
-	// Fetch end offsets once — reused for both start-offset resolution and
-	// end-of-partition tracking (eliminates N+1 redundant broker round-trips).
-	endOffsets, err := k.admin.ListEndOffsets(ctx, topicName)
-	if err != nil {
-		return nil, fmt.Errorf("consume: list end offsets: %w", err)
-	}
-
 	partOffsets := make(map[int32]kgo.Offset, len(partitions))
 	partEndOffsets := make(map[int32]int64, len(partitions))
 	for _, p := range partitions {
-		if eo, ok := endOffsets.Lookup(topicName, p); ok {
-			partEndOffsets[p] = eo.Offset
+		eo := topicEndOffsets[p].Offset
+		var so int64
+		if lso, ok := startOffsets.Lookup(topicName, p); ok && lso.Offset > 0 {
+			so = lso.Offset
 		}
-		offset := resolveStartOffsetFromEndOffsets(partEndOffsets[p], startOffset, perPartition)
+		// Skip empty partitions (lowWatermark >= highWatermark) so we never block polling them
+		if eo <= so {
+			continue
+		}
+		offset := resolveStartOffsetFromEndOffsets(eo, startOffset, perPartition)
+		if offset < so {
+			offset = so
+		}
+		if offset >= eo {
+			continue
+		}
+		partEndOffsets[p] = eo
+		partOffsets[p] = kgo.NewOffset().At(offset)
+	}
+
+	if len(partOffsets) == 0 {
+		return []Message{}, nil
+	}
+
+	// Recompute budget across only non-empty partitions so a single active
+	// partition can still fulfill the full requested limit when sibling partitions are empty.
+	perPartition, totalCap = clampedBudget(limit, len(partOffsets))
+	for p, eo := range partEndOffsets {
+		var so int64
+		if lso, ok := startOffsets.Lookup(topicName, p); ok && lso.Offset > 0 {
+			so = lso.Offset
+		}
+		offset := resolveStartOffsetFromEndOffsets(eo, startOffset, perPartition)
+		if offset < so {
+			offset = so
+		}
 		partOffsets[p] = kgo.NewOffset().At(offset)
 	}
 
@@ -161,37 +248,64 @@ func (k *KafkaService) ConsumeMessagesFromTimestamp(topicName string, partition 
 
 	ctx := k.getCtx()
 
-	partitions, err := k.resolvePartitions(ctx, topicName, partition)
-	if err != nil {
+	// Parallel: resolve timestamp offsets and end offsets in a single round-trip window
+	var timestampOffsets, endOffsets kadm.ListedOffsets
+	g, gCtx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		var err error
+		timestampOffsets, err = k.admin.ListOffsetsAfterMilli(gCtx, timestampMs, topicName)
+		if err != nil {
+			return fmt.Errorf("consume: list offsets after milli: %w", err)
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		endOffsets, err = k.admin.ListEndOffsets(gCtx, topicName)
+		if err != nil {
+			return fmt.Errorf("consume: list end offsets: %w", err)
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
-	perPartition, totalCap := clampedBudget(limit, len(partitions))
-
-	// Resolve per-partition offsets from timestamp
-	timestampOffsets, err := k.admin.ListOffsetsAfterMilli(ctx, timestampMs, topicName)
-	if err != nil {
-		return nil, fmt.Errorf("consume: list offsets after milli: %w", err)
+	topicEndOffsets, ok := endOffsets[topicName]
+	if !ok || len(topicEndOffsets) == 0 {
+		return nil, ErrTopicNotFound
 	}
 
-	endOffsets, err := k.admin.ListEndOffsets(ctx, topicName)
-	if err != nil {
-		return nil, fmt.Errorf("consume: list end offsets: %w", err)
+	var partitions []int32
+	if partition >= 0 {
+		partitions = []int32{partition}
+	} else {
+		partitions = make([]int32, 0, len(topicEndOffsets))
+		for p := range topicEndOffsets {
+			if p >= 0 {
+				partitions = append(partitions, p)
+			}
+		}
 	}
 
 	partOffsets := make(map[int32]kgo.Offset, len(partitions))
 	partEndOffsets := make(map[int32]int64, len(partitions))
 	for _, p := range partitions {
-		if eo, ok := endOffsets.Lookup(topicName, p); ok {
-			partEndOffsets[p] = eo.Offset
+		eo := topicEndOffsets[p].Offset
+		to, ok := timestampOffsets.Lookup(topicName, p)
+		if !ok || to.Offset < 0 || to.Offset >= eo {
+			// No messages at or after timestampMs in this partition — skip it
+			continue
 		}
-		// Use timestamp-resolved offset; fall back to end offset if not found
-		if to, ok := timestampOffsets.Lookup(topicName, p); ok && to.Offset >= 0 {
-			partOffsets[p] = kgo.NewOffset().At(to.Offset)
-		} else {
-			partOffsets[p] = kgo.NewOffset().At(partEndOffsets[p])
-		}
+		partEndOffsets[p] = eo
+		partOffsets[p] = kgo.NewOffset().At(to.Offset)
 	}
+
+	if len(partOffsets) == 0 {
+		return []Message{}, nil
+	}
+
+	perPartition, totalCap := clampedBudget(limit, len(partOffsets))
 
 	msgs, err := k.consumeFromOffsets(ctx, topicName, partOffsets, partEndOffsets, perPartition, totalCap)
 	if err != nil {
@@ -200,8 +314,8 @@ func (k *KafkaService) ConsumeMessagesFromTimestamp(topicName string, partition 
 	return mergeSortTrim(msgs, limit, false), nil
 }
 
-// resolvePartitions returns partition IDs to consume.
-// partition=-1 means all partitions for the topic.
+// resolvePartitions returns the target partition IDs for a topic.
+// When partition >= 0, returns just that partition. Otherwise lists all via admin.
 func (k *KafkaService) resolvePartitions(ctx context.Context, topicName string, partition int32) ([]int32, error) {
 	if partition >= 0 {
 		return []int32{partition}, nil
@@ -209,18 +323,18 @@ func (k *KafkaService) resolvePartitions(ctx context.Context, topicName string, 
 
 	topics, err := k.admin.ListTopics(ctx, topicName)
 	if err != nil {
-		return nil, fmt.Errorf("consume: list partitions: %w", err)
+		return nil, fmt.Errorf("consume: list topic: %w", err)
 	}
 	td, ok := topics[topicName]
-	if !ok {
+	if !ok || td.Err != nil {
 		return nil, ErrTopicNotFound
 	}
 
-	ids := make([]int32, len(td.Partitions))
-	for i, p := range td.Partitions.Sorted() {
-		ids[i] = p.Partition
+	partitions := make([]int32, 0, len(td.Partitions))
+	for _, p := range td.Partitions {
+		partitions = append(partitions, p.Partition)
 	}
-	return ids, nil
+	return partitions, nil
 }
 
 // resolveStartOffsetFromEndOffsets computes the actual start offset for a partition

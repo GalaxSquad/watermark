@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // ExportToFile opens a native Save dialog and writes templates for a single cluster.
@@ -26,13 +26,13 @@ func (s *TemplateService) ExportToFile(clusterID string) error {
 		return fmt.Errorf("export: marshal: %w", err)
 	}
 
-	path, err := wailsRuntime.SaveFileDialog(s.ctx, wailsRuntime.SaveDialogOptions{
-		Title:           "Export Templates",
-		DefaultFilename: "watermark-templates.json",
-		Filters: []wailsRuntime.FileFilter{
+	path, err := application.Get().Dialog.SaveFileWithOptions(&application.SaveFileDialogOptions{
+		Title:    "Export Templates",
+		Filename: "watermark-templates.json",
+		Filters: []application.FileFilter{
 			{DisplayName: "JSON Files", Pattern: "*.json"},
 		},
-	})
+	}).PromptForSingleSelection()
 	if err != nil {
 		return fmt.Errorf("export: dialog: %w", err)
 	}
@@ -49,12 +49,12 @@ func (s *TemplateService) ExportToFile(clusterID string) error {
 // ImportFromFile opens a native Open dialog and imports templates from a JSON file
 // into the specified cluster.
 func (s *TemplateService) ImportFromFile(clusterID string, merge bool) error {
-	path, err := wailsRuntime.OpenFileDialog(s.ctx, wailsRuntime.OpenDialogOptions{
+	path, err := application.Get().Dialog.OpenFileWithOptions(&application.OpenFileDialogOptions{
 		Title: "Import Templates",
-		Filters: []wailsRuntime.FileFilter{
+		Filters: []application.FileFilter{
 			{DisplayName: "JSON Files", Pattern: "*.json"},
 		},
-	})
+	}).PromptForSingleSelection()
 	if err != nil {
 		return fmt.Errorf("import: dialog: %w", err)
 	}

@@ -24,8 +24,13 @@ const COLOR_TEXT: Record<string, string> = {
 export function ClusterList() {
   const [editingClusterId, setEditingClusterId] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const { activeClusterId, connectionStatus, connectToCluster, disconnectCluster } =
-    useSettingsStore();
+  const {
+    activeClusterId,
+    pooledClusterIds,
+    connectionStatus,
+    connectToCluster,
+    disconnectCluster,
+  } = useSettingsStore();
 
   /* Cluster profiles are global config — not scoped by active cluster */
   const { data: clusters = [] } = useQuery({
@@ -38,9 +43,9 @@ export function ClusterList() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["clusters"] });
 
   const handleDelete = async (id: string) => {
-    // Disconnect if deleting active cluster
-    if (id === activeClusterId) {
-      await disconnectCluster();
+    // Disconnect and evict from pool if active or warm
+    if (id === activeClusterId || pooledClusterIds.includes(id)) {
+      await disconnectCluster(id);
     }
     await DeleteClusterProfile(id);
     invalidate();
@@ -53,7 +58,7 @@ export function ClusterList() {
 
   const handleConnect = async (id: string) => {
     if (activeClusterId === id && connectionStatus === "connected") {
-      await disconnectCluster();
+      await disconnectCluster(id);
     } else {
       await connectToCluster(id);
     }
@@ -98,6 +103,7 @@ export function ClusterList() {
           const isActive = activeClusterId === cluster.id;
           const isConnected = isActive && connectionStatus === "connected";
           const isConnecting = isActive && connectionStatus === "connecting";
+          const isWarm = !isConnected && pooledClusterIds.includes(cluster.id);
 
           return (
             <div
@@ -120,7 +126,9 @@ export function ClusterList() {
                       ? "bg-status-healthy animate-pulse"
                       : isConnecting
                         ? "bg-primary animate-pulse"
-                        : "bg-muted-foreground"
+                        : isWarm
+                          ? "bg-amber-400"
+                          : "bg-muted-foreground"
                   )}
                 />
                 <span className={cn(
@@ -135,6 +143,14 @@ export function ClusterList() {
                 {isConnected && (
                   <span className="text-[10px] font-mono text-status-healthy px-1.5 py-0.5 bg-status-healthy/10 rounded border border-status-healthy/20">
                     Connected
+                  </span>
+                )}
+                {isWarm && (
+                  <span
+                    title="Connection kept warm in pool — auto-closes after 15 minutes of inactivity"
+                    className="text-[10px] font-mono text-amber-400 px-1.5 py-0.5 bg-amber-500/10 rounded border border-amber-500/20"
+                  >
+                    Warm (15m TTL)
                   </span>
                 )}
                 {isConnecting && (
@@ -154,10 +170,19 @@ export function ClusterList() {
                       ? "text-status-healthy hover:text-red-400 hover:bg-red-500/10"
                       : "text-muted-foreground hover:text-status-healthy hover:bg-status-healthy/10"
                   )}
-                  title={isConnected ? "Disconnect" : "Connect"}
+                  title={isConnected ? "Disconnect" : isWarm ? "Switch to warm connection" : "Connect"}
                 >
                   <Icon name="power" className="size-3.5" />
                 </button>
+                {isWarm && (
+                  <button
+                    onClick={() => disconnectCluster(cluster.id)}
+                    className="p-1.5 text-amber-400 hover:text-red-400 rounded hover:bg-red-500/10 transition-colors"
+                    title="Close warm connection in pool"
+                  >
+                    <Icon name="x" className="size-3.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => setEditingClusterId(editingClusterId === cluster.id ? null : cluster.id)}
                   className="p-1.5 text-muted-foreground hover:text-foreground rounded hover:bg-accent transition-colors"

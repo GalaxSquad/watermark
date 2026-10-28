@@ -55,7 +55,7 @@ echo "════════════════════════�
 # ── Step 1: Build the Wails app ──────────────────────
 echo ""
 echo "🔨 Step 1/4: Building Wails app..."
-wails build -clean
+wails3 package
 echo "   ✅ Built: ${APP_PATH}"
 
 # ── Step 2: Code Signing ─────────────────────────────

@@ -1,4 +1,8 @@
-import { DashboardMetricCards, BrokerTable } from "@/components/dashboard/dashboard-widgets";
+import {
+  DashboardMetricCards,
+  BrokerTable,
+  DashboardQuickInsights,
+} from "@/components/dashboard/dashboard-widgets";
 import { RefreshButton } from "@/components/shared/refresh-button";
 
 export function DashboardPage() {
@@ -9,11 +13,12 @@ export function DashboardPage() {
           Cluster Overview
         </h1>
         <div className="shrink-0">
-          <RefreshButton queryKeys={[["dashboard"]]} />
+          <RefreshButton queryKeys={[["dashboard"], ["topics"], ["consumer-groups"]]} />
         </div>
       </div>
       <DashboardMetricCards />
       <BrokerTable />
+      <DashboardQuickInsights />
     </div>
   );
 }

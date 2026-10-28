@@ -1,20 +1,29 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
+import { CopyableText } from "@/components/shared/copyable-text";
 import type { ConsumerGroupMember } from "@/types/kafka";
 
 const columns: ColumnDef<ConsumerGroupMember, unknown>[] = [
   {
     accessorKey: "clientId",
     header: "Client ID",
-    cell: ({ row }) => <span className="text-foreground font-medium">{row.original.clientId}</span>,
+    cell: ({ row }) => (
+      <CopyableText
+        value={row.original.clientId}
+        textClassName="text-foreground font-medium max-w-[320px]"
+        copyLabel="Copy Client ID"
+      />
+    ),
   },
   {
     accessorKey: "host",
     header: "Host IP",
     cell: ({ row }) => (
-      <span className="font-mono text-foreground" title="NAT gateways may mask the true pod IP">
-        {row.original.host}
-      </span>
+      <CopyableText
+        value={row.original.host}
+        textClassName="text-foreground max-w-[240px]"
+        copyLabel="Copy Host IP"
+      />
     ),
   },
   {

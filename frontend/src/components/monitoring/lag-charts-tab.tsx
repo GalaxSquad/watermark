@@ -27,9 +27,13 @@ import { toast } from "sonner";
 import type { TopicLagSummary } from "@/types/lag-alerts";
 import type { TimeWindow, ChartType } from "./chart-entity-types";
 
+interface LagChartsTabProps {
+  onOpenConfig?: () => void;
+}
+
 /** Charts tab — interactive time-series lag charts. */
-export function LagChartsTab() {
-  const { alertConfig, loadConfig } = useLagAlertsStore();
+export function LagChartsTab({ onOpenConfig }: LagChartsTabProps) {
+  const { alertConfig, configLoading, configLoaded, loadConfig } = useLagAlertsStore();
   const recordingEnabled = alertConfig?.recordingEnabled ?? false;
   const pollInterval = (alertConfig?.pollIntervalSec ?? 30) * 1000;
   const clusterId = useSettingsStore((s) => s.activeClusterId);
@@ -162,13 +166,32 @@ export function LagChartsTab() {
     [enrichedEntities],
   );
 
-  // Empty states
-  if (alertConfig === null) {
+  // Empty & loading states
+  if (!clusterId || connectionStatus !== "connected") {
     return (
-      <div className="flex items-center justify-center h-64 text-sm text-muted-foreground">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading configuration...
+      <div className="flex flex-col items-center justify-center h-64 gap-3 glass-panel text-sm text-muted-foreground">
+        <Icon name="bar-chart" className="size-10" tone="muted" />
+        <p>Connect to a cluster to view time-series lag charts.</p>
+      </div>
+    );
+  }
+
+  if (configLoading && !configLoaded) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4 glass-panel p-6">
+        <div className="w-full max-w-md space-y-2.5">
+          <div className="h-4 w-1/3 rounded bg-secondary animate-pulse mx-auto" />
+          <div className="h-24 w-full rounded-lg bg-secondary/60 animate-pulse" />
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span>Loading monitoring configuration…</span>
+          <button
+            type="button"
+            onClick={() => loadConfig(clusterId)}
+            className="px-2.5 py-1 rounded border border-border bg-secondary text-foreground hover:bg-accent transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -176,15 +199,25 @@ export function LagChartsTab() {
 
   if (!recordingEnabled) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <Icon name="bar-chart" className="size-12" tone="muted" />
-        <div className="text-center space-y-1">
-          <p className="text-sm text-muted-foreground">Chart recording is disabled.</p>
+      <div className="flex flex-col items-center justify-center py-12 px-4 gap-4 glass-panel">
+        <Icon name="bar-chart" className="size-10" tone="muted" />
+        <div className="text-center space-y-1.5 max-w-md">
+          <p className="text-sm font-medium text-foreground">Lag time-series recording is disabled</p>
           <p className="text-xs text-muted-foreground">
-            Enable recording in the <span className="text-primary">Settings</span> to start
-            capturing lag data.
+            Enable <span className="text-foreground font-medium">Enable Monitoring</span> and{" "}
+            <span className="text-foreground font-medium">Record Lag for Charts</span> in Monitoring Configuration to capture live lag trends.
           </p>
         </div>
+        {onOpenConfig && (
+          <button
+            type="button"
+            onClick={onOpenConfig}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Icon name="settings" className="size-3.5" />
+            Configure Monitoring
+          </button>
+        )}
       </div>
     );
   }

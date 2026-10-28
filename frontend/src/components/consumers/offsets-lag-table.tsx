@@ -1,5 +1,6 @@
 import { useState, useMemo, Fragment } from "react";
 import { Icon } from "@/components/ui/icon";
+import { CopyableText } from "@/components/shared/copyable-text";
 import { cn, formatNumber } from "@/lib/utils";
 import type { ConsumerGroupOffset } from "@/types/kafka";
 
@@ -84,7 +85,7 @@ export function OffsetsLagTable({ offsets }: OffsetsLagTableProps) {
                         onClick={() => toggle(g.topic)}
                       >
                         <td className="px-4 py-3 text-sm font-mono text-foreground">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             <Icon
                               name="chevron-right"
                               tone="muted"
@@ -93,16 +94,30 @@ export function OffsetsLagTable({ offsets }: OffsetsLagTableProps) {
                                 isOpen && "rotate-90"
                               )}
                             />
-                            {g.topic}
+                            <CopyableText
+                              value={g.topic}
+                              textClassName="text-foreground"
+                              copyLabel="Copy Topic Name"
+                            />
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm font-mono tabular-nums text-foreground">
                           {g.partitions.length}
                         </td>
                         <td className="px-4 py-3 text-sm font-mono tabular-nums">
-                          <span className={cn(g.totalLag > 0 && "text-semantic-red font-bold")}>
+                          <span
+                            className={cn(
+                              g.totalLag > 10000
+                                ? "text-semantic-red font-bold"
+                                : g.totalLag >= 1000
+                                  ? "text-amber-400 font-semibold"
+                                  : "text-foreground"
+                            )}
+                          >
                             {formatNumber(g.totalLag)}
-                            {g.totalLag > 0 && <Icon name="alert-triangle" className="size-3 inline-block ml-1" tone="danger" />}
+                            {g.totalLag > 10000 && (
+                              <Icon name="alert-triangle" className="size-3 inline-block ml-1" tone="danger" />
+                            )}
                           </span>
                         </td>
                       </tr>
@@ -140,9 +155,19 @@ export function OffsetsLagTable({ offsets }: OffsetsLagTableProps) {
                                       {formatNumber(p.endOffset)}
                                     </td>
                                     <td className="px-6 py-2 text-xs font-mono tabular-nums">
-                                      <span className={cn(p.lag > 0 && "text-semantic-red font-bold")}>
+                                      <span
+                                        className={cn(
+                                          p.lag > 10000
+                                            ? "text-semantic-red font-bold"
+                                            : p.lag >= 1000
+                                              ? "text-amber-400 font-semibold"
+                                              : "text-foreground"
+                                        )}
+                                      >
                                         {formatNumber(p.lag)}
-                                        {p.lag > 0 && <Icon name="alert-triangle" className="size-3 inline-block ml-1" tone="danger" />}
+                                        {p.lag > 10000 && (
+                                          <Icon name="alert-triangle" className="size-3 inline-block ml-1" tone="danger" />
+                                        )}
                                       </span>
                                     </td>
                                   </tr>

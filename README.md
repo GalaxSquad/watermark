@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>A premium, native desktop Kafka management tool for macOS and Windows.</strong><br/>
-  Built with Go (Wails v2) + React + TypeScript.
+  Built with Go (Wails v3) + React + TypeScript.
 </p>
 
 ---
@@ -30,7 +30,7 @@
 
 | Component | Library | Purpose |
 |-----------|---------|---------|
-| Desktop Framework | `wails/v2` | Native desktop app with embedded webview |
+| Desktop Framework | `wails/v3` | Native desktop app with embedded webview |
 | Kafka Client | `twmb/franz-go` | Pure-Go Kafka client (no C-bindings) |
 | Secure Storage | `zalando/go-keyring` | macOS Keychain / Windows Credential Manager |
 | Auto-Update | `go-rocket-update` | Self-updating binary distribution |
@@ -65,10 +65,11 @@ watermark/
 │   │   ├── main.tsx        # React entry point
 │   │   ├── assets/         # Static assets (fonts, images)
 │   │   └── *.css           # Stylesheets
-│   ├── wailsjs/            # Auto-generated Wails JS bindings
+│   ├── bindings/           # Auto-generated Wails v3 TS bindings
 │   ├── package.json        # Node.js dependencies
 │   ├── tsconfig.json       # TypeScript configuration
 │   └── vite.config.ts      # Vite bundler configuration
+├── Taskfile.yml            # Wails v3 build & dev task definitions
 ├── docs/                   # Project documentation
 │   └── mock/               # UI mockups / prototypes
 └── plans/                  # Implementation plans
@@ -78,9 +79,9 @@ watermark/
 
 ### Prerequisites
 
-- **Go** ≥ 1.23
-- **Node.js** ≥ 18
-- **Wails CLI** v2 — `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- **Go** ≥ 1.25
+- **Node.js** ≥ 20
+- **Wails v3 CLI** — `go install github.com/wailsapp/wails/v3/cmd/wails3@latest`
 - **macOS**: Xcode Command Line Tools
 - **Windows**: WebView2 runtime
 
@@ -93,11 +94,15 @@ git clone <repo-url> && cd watermark
 # Install frontend dependencies
 cd frontend && npm install && cd ..
 
-# Run in live development mode
-wails dev
+# Regenerate frontend TypeScript bindings
+wails3 generate bindings -ts
 
-# Build production binary
-wails build
+# Run in live development mode
+wails3 dev
+
+# Build production binary / package .app bundle
+wails3 build
+wails3 package
 ```
 
 ### Development URLs

@@ -30,6 +30,8 @@ const COLOR_TEXT: Record<string, string> = {
 export function ClusterDropdown() {
   const {
     activeClusterId,
+    pooledClusterIds,
+    refreshPooledClusters,
     connectionStatus,
     connectionError,
     connectToCluster,
@@ -88,7 +90,7 @@ export function ClusterDropdown() {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => { if (open) refreshPooledClusters(); }}>
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
@@ -139,6 +141,7 @@ export function ClusterDropdown() {
           clusters.map((cluster) => {
             const isActive = cluster.id === activeClusterId;
             const isThisConnected = isActive && connectionStatus === "connected";
+            const isWarm = !isThisConnected && pooledClusterIds.includes(cluster.id);
 
             return (
               <DropdownMenuItem
@@ -171,6 +174,14 @@ export function ClusterDropdown() {
                 {isThisConnected && (
                   <span className="text-[10px] font-mono text-status-healthy-foreground dark:text-status-healthy shrink-0">
                     ● Live
+                  </span>
+                )}
+                {isWarm && (
+                  <span
+                    title="Warm connection cached in pool (auto-closes after 15m idle)"
+                    className="text-[10px] font-mono text-amber-500 dark:text-amber-400 shrink-0"
+                  >
+                    ● Warm
                   </span>
                 )}
               </DropdownMenuItem>

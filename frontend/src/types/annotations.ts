@@ -4,7 +4,7 @@
  * Re-exports Wails-generated model classes as the canonical types.
  */
 
-import { annotations } from "../../wailsjs/go/models";
+import * as annotations from "../../bindings/watermark-01/internal/annotations/models";
 
 export type TopicAnnotation = annotations.TopicAnnotation;
 

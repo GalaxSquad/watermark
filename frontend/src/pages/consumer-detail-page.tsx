@@ -9,6 +9,7 @@ import { OffsetsLagTable } from "@/components/consumers/offsets-lag-table";
 import { ConsumerActionDropdown } from "@/components/consumers/consumer-action-dropdown";
 import { DropGroupDialog } from "@/components/consumers/drop-group-dialog";
 import { RefreshButton } from "@/components/shared/refresh-button";
+import { CopyableText } from "@/components/shared/copyable-text";
 import { useKafkaQuery, clusterQueryKey } from "@/hooks/use-kafka-query";
 import { GetConsumerGroupDetail, DeleteRule, RestartMonitoring } from "@/lib/wails-client";
 import { useReadOnly } from "@/hooks/use-read-only";
@@ -77,8 +78,12 @@ export function ConsumerDetailPage() {
           <span className="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider block">
             Consumer Group
           </span>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight text-foreground break-all" title={groupId}>
-            {groupId}
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold tracking-tight text-foreground min-w-0">
+            <CopyableText
+              value={groupId}
+              alwaysShowCopy
+              copyLabel="Copy Group ID"
+            />
           </h1>
         </div>
         <div className="flex items-center gap-2 shrink-0">

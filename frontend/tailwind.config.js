@@ -5,50 +5,50 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* shadcn CSS-variable-driven tokens */
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        /* shadcn CSS-variable-driven tokens (with alpha-value support via color-mix) */
+        background: "color-mix(in srgb, var(--background) calc(<alpha-value> * 100%), transparent)",
+        foreground: "color-mix(in srgb, var(--foreground) calc(<alpha-value> * 100%), transparent)",
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--primary) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--primary-foreground) calc(<alpha-value> * 100%), transparent)",
         },
         card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--card) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--card-foreground) calc(<alpha-value> * 100%), transparent)",
         },
         popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--popover) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--popover-foreground) calc(<alpha-value> * 100%), transparent)",
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--secondary) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--secondary-foreground) calc(<alpha-value> * 100%), transparent)",
         },
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--muted) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--muted-foreground) calc(<alpha-value> * 100%), transparent)",
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--accent) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--accent-foreground) calc(<alpha-value> * 100%), transparent)",
         },
         destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
+          DEFAULT: "color-mix(in srgb, var(--destructive) calc(<alpha-value> * 100%), transparent)",
+          foreground: "color-mix(in srgb, var(--destructive-foreground) calc(<alpha-value> * 100%), transparent)",
         },
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
+        border: "color-mix(in srgb, var(--border) calc(<alpha-value> * 100%), transparent)",
+        input: "color-mix(in srgb, var(--input) calc(<alpha-value> * 100%), transparent)",
+        ring: "color-mix(in srgb, var(--ring) calc(<alpha-value> * 100%), transparent)",
         /* Project-specific tokens */
         glass: {
           panel: "var(--glass-panel)",
           sidebar: "rgba(10, 10, 10, 0.4)",
         },
         semantic: {
-          cyan: "var(--semantic-cyan)",
-          purple: "var(--semantic-purple)",
-          orange: "var(--semantic-orange)",
-          red: "var(--semantic-red)",
+          cyan: "color-mix(in srgb, var(--semantic-cyan) calc(<alpha-value> * 100%), transparent)",
+          purple: "color-mix(in srgb, var(--semantic-purple) calc(<alpha-value> * 100%), transparent)",
+          orange: "color-mix(in srgb, var(--semantic-orange) calc(<alpha-value> * 100%), transparent)",
+          red: "color-mix(in srgb, var(--semantic-red) calc(<alpha-value> * 100%), transparent)",
         },
         status: {
           healthy: "rgb(var(--status-healthy-rgb) / <alpha-value>)",

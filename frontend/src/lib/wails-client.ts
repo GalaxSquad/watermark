@@ -3,16 +3,24 @@
  * Re-exports all service bindings with typed wrappers for use with useKafkaQuery.
  */
 
+import type { Topic } from "@/types/kafka";
+import type { ClusterProfile } from "@/types/config";
+import type { TopicAnnotation } from "@/types/annotations";
+import type { TopicTemplate } from "@/types/templates";
+import type { ClusterAlertConfig } from "@/types/lag-alerts";
+
 // --- Kafka Service ---
+import { GetTopic as _GetTopic } from "../../bindings/watermark-01/internal/kafka/kafkaservice";
 export {
   Connect,
   Disconnect,
+  DisconnectCluster,
+  GetPooledClusters,
   IsConnected,
   GetClusterHealth,
   GetBrokers,
   GetDashboardData,
   GetTopics,
-  GetTopic,
   GetTopicPartitions,
   GetTopicConfigs,
   GetTopicConsumers,
@@ -35,27 +43,46 @@ export {
   DeleteConsumerGroup,
   ClearCache,
   UpdateReadOnly,
-} from "../../wailsjs/go/kafka/KafkaService";
+} from "../../bindings/watermark-01/internal/kafka/kafkaservice";
+
+export const GetTopic = (name: string): Promise<Topic> =>
+  _GetTopic(name) as Promise<Topic>;
 
 // --- Config Service ---
 // NOTE: GetDecryptedPassword intentionally NOT exported — decryption stays server-side only
+import {
+  GetCluster as _GetCluster,
+  DuplicateCluster as _DuplicateCluster,
+  TestConnection as _TestConnection,
+} from "../../bindings/watermark-01/internal/config/configservice";
 export {
   GetClusters,
-  GetCluster,
   SaveCluster,
   DeleteCluster as DeleteClusterProfile,
-  DuplicateCluster,
   GetSettings,
   SaveSettings,
   GetActiveClusterID,
   SetActiveCluster,
-  TestConnection,
   ExportConfig,
   ImportConfig,
   ListAWSProfiles,
   GetSkippedVersion,
   SkipVersion,
-} from "../../wailsjs/go/config/ConfigService";
+} from "../../bindings/watermark-01/internal/config/configservice";
+
+export const GetCluster = (id: string): Promise<ClusterProfile> =>
+  _GetCluster(id) as Promise<ClusterProfile>;
+
+export const DuplicateCluster = (id: string): Promise<ClusterProfile> =>
+  _DuplicateCluster(id) as Promise<ClusterProfile>;
+
+export const TestConnection = (
+  profile: ClusterProfile,
+  clusterID: string,
+): Promise<NonNullable<Awaited<ReturnType<typeof _TestConnection>>>> =>
+  _TestConnection(profile, clusterID) as Promise<
+    NonNullable<Awaited<ReturnType<typeof _TestConnection>>>
+  >;
 
 // --- Schema Service ---
 export {
@@ -64,11 +91,11 @@ export {
   GetSchemaVersion,
   GetCompatibility,
   Configure as ConfigureSchemaRegistry,
-} from "../../wailsjs/go/schema/SchemaService";
+} from "../../bindings/watermark-01/internal/schema/schemaservice";
 
 // --- Annotation Service ---
+import { GetAnnotations as _GetAnnotations } from "../../bindings/watermark-01/internal/annotations/annotationservice";
 export {
-  GetAnnotations,
   GetAnnotation,
   SetAnnotation,
   BatchSetAnnotation,
@@ -80,7 +107,12 @@ export {
   ExportToFile,
   ExportAllToFile,
   ImportFromFile,
-} from "../../wailsjs/go/annotations/AnnotationService";
+} from "../../bindings/watermark-01/internal/annotations/annotationservice";
+
+export const GetAnnotations = (
+  clusterID: string,
+): Promise<Record<string, TopicAnnotation>> =>
+  _GetAnnotations(clusterID) as Promise<Record<string, TopicAnnotation>>;
 
 // --- Updater Service ---
 export {
@@ -88,11 +120,10 @@ export {
   CheckForUpdate,
   ApplyUpdate,
   GetChangelog,
-} from "../../wailsjs/go/updater/UpdaterService";
+} from "../../bindings/watermark-01/internal/updater/updaterservice";
 
 // --- Lag Alert Service ---
-import { SaveAlertConfig as _SaveAlertConfig } from "../../wailsjs/go/lagalert/LagAlertService";
-import type { ClusterAlertConfig } from "@/types/lag-alerts";
+import { SaveAlertConfig as _SaveAlertConfig } from "../../bindings/watermark-01/internal/lagalert/lagalertservice";
 export {
   GetAlertConfig,
   AddRule,
@@ -105,15 +136,15 @@ export {
   RestartMonitoring,
   GetTopicTimeSeries,
   GetGroupTimeSeries,
-} from "../../wailsjs/go/lagalert/LagAlertService";
+} from "../../bindings/watermark-01/internal/lagalert/lagalertservice";
 
 /** Typed wrapper — accepts app interface, bridges to Wails class at boundary. */
 export const SaveAlertConfig = (clusterId: string, cfg: ClusterAlertConfig): Promise<void> =>
   _SaveAlertConfig(clusterId, cfg as any);
 
 // --- Template Service ---
+import { GetTemplates as _GetTemplates } from "../../bindings/watermark-01/internal/templates/templateservice";
 export {
-  GetTemplates,
   GetTemplate,
   SaveTemplate,
   UpdateTemplate,
@@ -122,5 +153,10 @@ export {
   ImportTemplates,
   ExportToFile as ExportTemplatesToFile,
   ImportFromFile as ImportTemplatesFromFile,
-} from "../../wailsjs/go/templates/TemplateService";
+} from "../../bindings/watermark-01/internal/templates/templateservice";
+
+export const GetTemplates = (
+  clusterID: string,
+): Promise<Record<string, TopicTemplate>> =>
+  _GetTemplates(clusterID) as Promise<Record<string, TopicTemplate>>;
 
