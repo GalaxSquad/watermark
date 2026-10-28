@@ -3,6 +3,27 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.0] - 2026-10-28
+
+### Added
+
+- Per-cluster connection pool with automatic Idle TTL eviction (15m for warm background clusters, 30m for inactive active cluster) and `Warm` status indicators
+- Reusable `CopyableText` component with full-text hover tooltip and 1-click copy across broker hosts, topic names, consumer group IDs, member IDs, and client IDs
+- Dashboard Quick Insights panel (Top Consumer Lag & Top Topics by Partitions) and actionable Schemas empty/guide states
+- Explicit lag threshold legend and stale lag indicators for `Empty` / `Dead` consumer groups
+
+### Changed
+
+- Migrate desktop runtime and bindings from Wails v2 to Wails v3 (`@wailsio/runtime`)
+- Reuse warm Kafka client (`AddConsumePartitions` / `PurgeTopicsFromConsuming`) and parallelize low/high watermark resolution (`ListStartOffsets` + `ListEndOffsets`) for near-instant message fetching
+
+### Fixed
+
+- Prevent 5s poll timeout hangs when fetching messages from empty, compacted, or transactional topic partitions
+- Fix nil-pointer dereference panic in `GetConsumerGroups` when `DescribeGroups` returns an error alongside partial group data
+- Fix topic tagging (`ServiceNameInput`, `AnnotationEditorModal`, `BatchTagModal`, and `TopicListTable`) so typed service names commit without requiring `Enter` first and work on read-only clusters
+- Fix sidebar active/focus states, `1279px` Monitoring table overflow, dialog width constraints, and `LagChartsTab` loading timeout/retry handling
+
 ## [1.1.6] - 2026-10-28
 
 ### Fixed

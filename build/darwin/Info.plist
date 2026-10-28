@@ -17,14 +17,14 @@
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
-		<string>0.0.1</string>
+		<string>1.2.0</string>
 		<key>CFBundleVersion</key>
-		<string>0.0.1</string>
+		<string>1.2.0</string>
 		<key>LSMinimumSystemVersion</key>
 		<string>12.0.0</string>
 		<key>NSHighResolutionCapable</key>
 		<string>true</string>
 		<key>NSHumanReadableCopyright</key>
-		<string>(c) 2025, My Company</string>
+		<string>(c) 2026, GalaxSquad</string>
 	</dict>
 </plist>
