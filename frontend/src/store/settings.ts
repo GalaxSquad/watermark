@@ -1,11 +1,17 @@
 import { create } from "zustand";
+import { Events } from "@wailsio/runtime";
+import { toast } from "sonner";
 import type { ThemeMode, UIDensity } from "@/types/config";
 import {
   Connect,
   Disconnect,
+  DisconnectCluster,
+  GetPooledClusters,
   IsConnected,
   GetActiveClusterID,
   SetActiveCluster,
+  ConfigureSchemaRegistry,
+  RestartMonitoring,
 } from "@/lib/wails-client";
 
 /** Frontend timeout (slightly longer than backend's 10s to let backend timeout trigger first) */
@@ -37,8 +43,10 @@ interface SettingsState {
   density: UIDensity;
   setDensity: (density: UIDensity) => void;
 
-  /* Active Cluster */
+  /* Active Cluster & Warm Pool */
   activeClusterId: string | null;
+  pooledClusterIds: string[];
+  refreshPooledClusters: () => Promise<void>;
 
   /* Per-cluster cache timestamps */
   clusterTimestamps: Record<string, number>;
@@ -48,7 +56,7 @@ interface SettingsState {
   connectionStatus: ConnectionStatus;
   connectionError: string | null;
   connectToCluster: (id: string) => Promise<void>;
-  disconnectCluster: () => Promise<void>;
+  disconnectCluster: (targetClusterId?: string) => Promise<void>;
   initializeConnection: () => Promise<void>;
 
   /** Check if a cluster's cache has expired (older than CLUSTER_CACHE_TTL_MS) */
@@ -132,6 +140,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setDensity: (density) => set({ density }),
 
   activeClusterId: null,
+  pooledClusterIds: [],
+
+  refreshPooledClusters: async () => {
+    try {
+      const ids = await GetPooledClusters();
+      set({ pooledClusterIds: ids ?? [] });
+    } catch {
+      // ignore
+    }
+  },
 
   clusterTimestamps: {},
 
@@ -151,27 +169,25 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   connectToCluster: async (id: string) => {
-    const { activeClusterId } = get();
-
-    // Disconnect current cluster first if connected to a different one
-    if (activeClusterId && activeClusterId !== id) {
-      try {
-        await Disconnect();
-      } catch {
-        // ignore disconnect errors during switch
-      }
-    }
-
+    // Do NOT call Disconnect() when switching clusters — the backend keeps the
+    // previous cluster's client warm in its pool until its Idle TTL (15m) expires.
     set({ connectionStatus: "connecting", connectionError: null, activeClusterId: id });
 
     try {
       await SetActiveCluster(id);
       await withTimeout(Connect(id), CONNECTION_TIMEOUT_MS, "Connection");
 
+      // Reconfigure Schema Registry & Lag Alerting for the newly active cluster (non-blocking)
+      ConfigureSchemaRegistry(id).catch(() => {});
+      RestartMonitoring(id).catch(() => {});
+
+      const pooled = await GetPooledClusters().catch(() => [id]);
+
       // Update timestamp on successful connection
       set((s) => ({
         connectionStatus: "connected",
         connectionError: null,
+        pooledClusterIds: pooled ?? [id],
         clusterTimestamps: { ...s.clusterTimestamps, [id]: Date.now() },
       }));
     } catch (err) {
@@ -181,29 +197,59 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
-  disconnectCluster: async () => {
+  disconnectCluster: async (targetClusterId?: string) => {
+    const { activeClusterId } = get();
+    const idToDisconnect = targetClusterId ?? activeClusterId;
+
+    if (idToDisconnect && idToDisconnect !== activeClusterId) {
+      // Explicitly disconnect a background warm cluster in the pool
+      try {
+        await DisconnectCluster(idToDisconnect);
+      } catch {
+        // ignore
+      }
+      await get().refreshPooledClusters();
+      return;
+    }
+
     try {
       await Disconnect();
     } catch {
       // ignore disconnect errors
     }
-    set({ connectionStatus: "disconnected", connectionError: null, activeClusterId: null });
+    const pooled = await GetPooledClusters().catch(() => []);
+    set({
+      connectionStatus: "disconnected",
+      connectionError: null,
+      activeClusterId: null,
+      pooledClusterIds: pooled ?? [],
+    });
   },
 
   initializeConnection: async () => {
+    // Subscribe to backend idle-TTL auto-disconnect events
+    Events.On("cluster:idle-disconnected", () => {
+      get().refreshPooledClusters();
+      set({ connectionStatus: "disconnected", connectionError: null });
+      toast.info("Cluster disconnected after 30 minutes of inactivity");
+    });
+
     try {
       const activeId = await GetActiveClusterID();
       if (!activeId) {
-        set({ connectionStatus: "disconnected", activeClusterId: null });
+        const pooled = await GetPooledClusters().catch(() => []);
+        set({ connectionStatus: "disconnected", activeClusterId: null, pooledClusterIds: pooled ?? [] });
         return;
       }
 
       // Check if already connected (e.g. hot reload)
       const connected = await IsConnected();
       if (connected) {
+        const pooled = await GetPooledClusters().catch(() => [activeId]);
         set((s) => ({
           connectionStatus: "connected",
           activeClusterId: activeId,
+          pooledClusterIds: pooled ?? [activeId],
           clusterTimestamps: { ...s.clusterTimestamps, [activeId]: Date.now() },
         }));
         return;
@@ -212,8 +258,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       // Try to auto-connect to the saved active cluster
       set({ connectionStatus: "connecting", activeClusterId: activeId });
       await withTimeout(Connect(activeId), CONNECTION_TIMEOUT_MS, "Auto-connect");
+      const pooled = await GetPooledClusters().catch(() => [activeId]);
       set((s) => ({
         connectionStatus: "connected",
+        pooledClusterIds: pooled ?? [activeId],
         clusterTimestamps: { ...s.clusterTimestamps, [activeId]: Date.now() },
       }));
     } catch (err) {

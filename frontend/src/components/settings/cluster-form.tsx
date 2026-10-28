@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
-import { SaveCluster, TestConnection, GetCluster, UpdateReadOnly } from "@/lib/wails-client";
-import { config } from "../../../wailsjs/go/models";
+import { SaveCluster, TestConnection, GetCluster, UpdateReadOnly, DisconnectCluster } from "@/lib/wails-client";
+import * as config from "../../../bindings/watermark-01/internal/config/models";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { ClusterFormFields } from "./cluster-form-fields";
@@ -126,10 +126,15 @@ export function ClusterForm({ clusterId, clusterName, onClose }: ClusterFormProp
       });
       await SaveCluster(profile);
 
-      // Sync backend readOnly flag if editing the currently active cluster
-      // (backend only sets this at connect time, so we push the new value)
-      if (!isNew && clusterId === activeClusterId) {
-        await UpdateReadOnly(form.readOnly);
+      // Sync backend readOnly flag if editing the currently active cluster,
+      // or evict pooled warm client if editing an inactive cluster so new credentials take effect
+      if (!isNew) {
+        if (clusterId === activeClusterId) {
+          await UpdateReadOnly(form.readOnly);
+        } else {
+          await DisconnectCluster(clusterId).catch(() => {});
+          await useSettingsStore.getState().refreshPooledClusters();
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ["clusters"] });

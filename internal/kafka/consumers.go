@@ -46,40 +46,28 @@ func (k *KafkaService) GetConsumerGroups() ([]ConsumerGroup, error) {
 		groupIDs = append(groupIDs, g.Group)
 	}
 
-	// Parallel: Lag + DescribeGroups are independent (both only need groupIDs)
+	// Fetch lag + group description in a single kadm.Lag() call
+	// (kadm.Lag already calls DescribeGroups internally and populates gl.Members).
+	// Recover from franz-go loadCoordinators nil-pointer panics and fall back gracefully.
 	var lags kadm.DescribedGroupLags
-	var described kadm.DescribedGroups
 	var lagsErr error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				lagsErr = fmt.Errorf("recovered panic: %v", r)
+			}
+		}()
+		lags, lagsErr = k.admin.Lag(ctx, groupIDs...)
+	}()
 
-	g2, gCtx := errgroup.WithContext(ctx)
-	safeGo(g2, func() error {
-		var err error
-		lags, err = k.admin.Lag(gCtx, groupIDs...)
-		lagsErr = err
-		return nil // graceful fallback
-	})
-	safeGo(g2, func() error {
-		described, _ = k.admin.DescribeGroups(gCtx, groupIDs...)
-		return nil
-	})
-	if err := g2.Wait(); err != nil {
-		return nil, fmt.Errorf("consumer groups: %w", err)
-	}
-
-	// Build member counts from described groups
-	memberCounts := make(map[string]int)
-	for _, dg := range described {
-		memberCounts[dg.Group] = len(dg.Members)
-	}
-
-	// Fallback: return groups without lag info if Lag() failed
+	// Fallback: return groups without lag info if Lag() failed or panicked
 	if lagsErr != nil {
 		result := make([]ConsumerGroup, 0, len(groups))
 		for _, g := range groups {
 			result = append(result, ConsumerGroup{
 				GroupID:  g.Group,
 				State:    mapGroupState(g.State),
-				Members:  memberCounts[g.Group],
+				Members:  0,
 				TotalLag: 0,
 			})
 		}
@@ -93,7 +81,7 @@ func (k *KafkaService) GetConsumerGroups() ([]ConsumerGroup, error) {
 		result = append(result, ConsumerGroup{
 			GroupID:  gl.Group,
 			State:    mapGroupState(gl.State),
-			Members:  memberCounts[gl.Group],
+			Members:  len(gl.Members),
 			TotalLag: totalLag,
 		})
 	})
@@ -257,8 +245,17 @@ func (k *KafkaService) GetAllGroupsLagDetail() ([]TopicLagSummary, error) {
 		groupIDs = append(groupIDs, g.Group)
 	}
 
-	lags, err := k.admin.Lag(ctx, groupIDs...)
-	if err != nil {
+	var lags kadm.DescribedGroupLags
+	var lagErr error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				lagErr = fmt.Errorf("recovered panic: %v", r)
+			}
+		}()
+		lags, lagErr = k.admin.Lag(ctx, groupIDs...)
+	}()
+	if lagErr != nil {
 		return []TopicLagSummary{}, nil // graceful fallback
 	}
 
