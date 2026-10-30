@@ -5,69 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.2.0] - 2026-10-28
 
-### Added
-
-- Per-cluster connection pool with automatic Idle TTL eviction (15m for warm background clusters, 30m for inactive active cluster) and `Warm` status indicators
-- Reusable `CopyableText` component with full-text hover tooltip and 1-click copy across broker hosts, topic names, consumer group IDs, member IDs, and client IDs
-- Dashboard Quick Insights panel (Top Consumer Lag & Top Topics by Partitions) and actionable Schemas empty/guide states
-- Explicit lag threshold legend and stale lag indicators for `Empty` / `Dead` consumer groups
-
-### Changed
-
-- Migrate desktop runtime and bindings from Wails v2 to Wails v3 (`@wailsio/runtime`)
-- Reuse warm Kafka client (`AddConsumePartitions` / `PurgeTopicsFromConsuming`) and parallelize low/high watermark resolution (`ListStartOffsets` + `ListEndOffsets`) for near-instant message fetching
-
-### Fixed
-
-- Prevent 5s poll timeout hangs when fetching messages from empty, compacted, or transactional topic partitions
-- Fix nil-pointer dereference panic in `GetConsumerGroups` when `DescribeGroups` returns an error alongside partial group data
-- Fix topic tagging (`ServiceNameInput`, `AnnotationEditorModal`, `BatchTagModal`, and `TopicListTable`) so typed service names commit without requiring `Enter` first and work on read-only clusters
-- Fix sidebar active/focus states, `1279px` Monitoring table overflow, dialog width constraints, and `LagChartsTab` loading timeout/retry handling
+- Migrate runtime to Wails v3 with per-cluster warm connection pool
+- Dashboard Quick Insights, 1-click copyable IDs, and lag status legends
+- Faster message fetching and fixes for compacted topics, panics, and tagging
 
 ## [1.1.6] - 2026-10-28
 
-### Fixed
-
-- Enable smooth vertical scrolling inside update changelog modal
-- Pin action footer buttons to ensure visibility on long release notes
-- Clean up duplicate 'v' prefix in version comparison display
+- Fix update changelog modal scrolling and pin footer action buttons
 
 ## [1.1.5] - 2026-10-28
 
-### Changed
-
-- UI/UX overhaul: Geist typography, calibrated dark theme, and compact 48px header
-- High data density: expanded desktop shell to 1720px with standardized pagination
-- Tactile feedback: active button press animations, skeleton loading, and keyboard navigation
-
-### Fixed
-
-- Responsive header: prevent action buttons from being clipped on narrow windows
+- UI/UX overhaul with Geist typography, compact 48px header, and 1720px layout
+- Skeleton loading states, tactile button feedback, and keyboard navigation
 
 ## [1.1.4] - 2026-09-09
 
-### Changed
-
-- Message timestamps display in the machine's local timezone (compact `YYYY-MM-DD HH:mm:ss`) instead of UTC `Z`; the raw UTC form is kept when the timestamp cannot be parsed or no local timezone can be resolved
+- Display message timestamps in local timezone (`YYYY-MM-DD HH:mm:ss`)
 
 ## [1.1.3] - 2026-05-19
 
-### Added
-
-- Drop consumer group dialog with action gating
-- Light theme with full component coverage
-- ASC/DESC sort toggle for messages filter bar
-- Row right-click context menu for tables
-
-### Changed
-
-- Migrate from lucide-react to Phosphor icons (thin weight)
-
-### Fixed
-
-- Drop consumer group race condition and stale config
-- Multi-partition latest-N fetch with per-partition budget
-- Command+K search palette subscribe error and theme mismatch
+- Light theme, drop consumer group dialog, row context menus, and sort toggle
+- Migrate to Phosphor icons and fix multi-partition latest-N message fetching
 
 ## [1.1.2] - 2026-04-01
 

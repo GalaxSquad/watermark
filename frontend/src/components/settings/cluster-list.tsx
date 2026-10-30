@@ -185,7 +185,13 @@ export function ClusterList() {
                 )}
                 <button
                   onClick={() => setEditingClusterId(editingClusterId === cluster.id ? null : cluster.id)}
-                  className="p-1.5 text-muted-foreground hover:text-foreground rounded hover:bg-accent transition-colors"
+                  className={cn(
+                    "p-1.5 rounded transition-colors",
+                    editingClusterId === cluster.id
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                  title={editingClusterId === cluster.id ? "Close editor" : "Edit cluster"}
                 >
                   <Icon name="pencil" className="size-3.5" />
                 </button>
@@ -219,6 +225,7 @@ export function ClusterList() {
       {/* Edit form for existing clusters */}
       {editingClusterId && editingClusterId !== "new" && (
         <ClusterForm
+          key={editingClusterId}
           clusterId={editingClusterId}
           clusterName={clusters.find((c) => c.id === editingClusterId)?.name ?? ""}
           onClose={() => { setEditingClusterId(null); invalidate(); }}
