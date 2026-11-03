@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -9,12 +9,15 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { cn, formatNumber } from "@/lib/utils";
+import { cn, copyToClipboard, formatNumber } from "@/lib/utils";
 import type { ConsumerGroup, ConsumerGroupState } from "@/types/kafka";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
+import { useReadOnly } from "@/hooks/use-read-only";
 import { GetConsumerGroups } from "@/lib/wails-client";
 import { AlertIndicator } from "./alert-indicator";
+import { ClearLagDialog, type ClearLagTarget } from "./clear-lag-dialog";
 import { useLagAlertsStore } from "@/store/lag-alerts";
+import type { RowContextMenuItem } from "@/components/shared/row-context-menu";
 
 const STATE_MAP: Record<ConsumerGroupState, "healthy" | "rebalancing" | "dead" | "empty"> = {
   Stable: "healthy",
@@ -32,6 +35,8 @@ interface ConsumerGroupTableProps {
 export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroupTableProps) {
   const { data: groups = [], isLoading } = useKafkaQuery(["consumer-groups"], GetConsumerGroups);
   const { alerts } = useLagAlertsStore();
+  const isReadOnly = useReadOnly();
+  const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
 
   const columns = useMemo<ColumnDef<ConsumerGroup, unknown>[]>(() => [
     {
@@ -145,13 +150,48 @@ export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroup
     },
   ], [alerts]);
 
+  const getRowContextMenu = (group: ConsumerGroup): RowContextMenuItem[] => {
+    const items: RowContextMenuItem[] = [
+      {
+        label: "Copy Group ID",
+        icon: "copy",
+        onSelect: () => copyToClipboard(group.groupId, "Group ID"),
+      },
+    ];
+
+    if (!isReadOnly) {
+      items.push({
+        label: "Clear Consumer Lag",
+        icon: "chevrons-right",
+        disabled: group.totalLag <= 0,
+        separatorBefore: true,
+        onSelect: () =>
+          setClearTarget({
+            type: "group",
+            groupId: group.groupId,
+            groupState: group.state,
+            totalLag: group.totalLag,
+          }),
+      });
+    }
+
+    return items;
+  };
+
   return (
-    <DataTable
-      data={groups}
-      columns={columns}
-      isLoading={isLoading}
-      onRowClick={(row) => onGroupClick(row.groupId)}
-      globalFilter={searchFilter}
-    />
+    <>
+      <DataTable
+        data={groups}
+        columns={columns}
+        isLoading={isLoading}
+        onRowClick={(row) => onGroupClick(row.groupId)}
+        globalFilter={searchFilter}
+        getRowContextMenu={getRowContextMenu}
+      />
+      <ClearLagDialog
+        target={clearTarget}
+        onClose={() => setClearTarget(null)}
+      />
+    </>
   );
 }

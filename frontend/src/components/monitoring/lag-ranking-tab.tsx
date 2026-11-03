@@ -2,13 +2,16 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
+import { useReadOnly } from "@/hooks/use-read-only";
 import { useRankingConfig } from "@/hooks/use-ranking-config";
 import { useSettingsStore } from "@/store/settings";
 import { GetAllGroupsLagDetail } from "@/lib/wails-client";
 import { globMatch } from "@/lib/glob-match";
 import { RankingConfigPanel } from "./ranking-config-panel";
 import { CopyableText } from "@/components/shared/copyable-text";
-import { cn } from "@/lib/utils";
+import { RowContextMenu, type RowContextMenuItem } from "@/components/shared/row-context-menu";
+import { ClearLagDialog, type ClearLagTarget } from "@/components/consumers/clear-lag-dialog";
+import { cn, copyToClipboard } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -40,6 +43,8 @@ export function LagRankingTab() {
   const clusterId = useSettingsStore((s) => s.activeClusterId);
   const { config, updateConfig } = useRankingConfig(clusterId);
   const [showFilters, setShowFilters] = useState(false);
+  const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
+  const isReadOnly = useReadOnly();
 
   const { data: topicLags } = useKafkaQuery<TopicLagSummary[]>(
     ["all-groups-lag-detail"],
@@ -113,45 +118,72 @@ export function LagRankingTab() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.slice(0, 5).map((t, idx) => (
-                  <tr
-                    key={t.topic}
-                    onClick={() =>
-                      navigate({
-                        to: "/topics/$topicId",
-                        params: { topicId: t.topic },
-                      })
-                    }
-                    className="border-b border-border cursor-pointer hover:bg-secondary transition-colors"
-                  >
-                    <td className="px-2.5 py-2 text-center text-muted-foreground font-mono text-xs">
-                      {idx + 1}
-                    </td>
-                    <td className="px-2.5 py-2 min-w-0">
-                      <CopyableText
-                        value={t.topic}
-                        textClassName="text-foreground"
-                        copyLabel="Copy Topic Name"
-                      />
-                    </td>
-                    <td className="px-2.5 py-2 text-right font-mono whitespace-nowrap">
-                      <span
-                        className={cn(
-                          t.totalLag > 10000
-                            ? "text-semantic-red font-semibold"
-                            : t.totalLag > 1000
-                              ? "text-amber-400 font-medium"
-                              : "text-foreground",
-                        )}
+                {filtered.slice(0, 5).map((t, idx) => {
+                  const contextItems: RowContextMenuItem[] = [
+                    {
+                      label: "Copy Topic Name",
+                      icon: "copy",
+                      onSelect: () => copyToClipboard(t.topic, "Topic Name"),
+                    },
+                  ];
+                  if (!isReadOnly) {
+                    contextItems.push({
+                      label: "Clear All Topic Lag",
+                      icon: "trash",
+                      variant: "destructive",
+                      disabled: t.totalLag <= 0,
+                      separatorBefore: true,
+                      onSelect: () =>
+                        setClearTarget({
+                          type: "topic",
+                          topicName: t.topic,
+                          totalLag: t.totalLag,
+                          groupCount: t.groups,
+                        }),
+                    });
+                  }
+
+                  return (
+                    <RowContextMenu key={t.topic} items={contextItems}>
+                      <tr
+                        onClick={() =>
+                          navigate({
+                            to: "/topics/$topicId",
+                            params: { topicId: t.topic },
+                          })
+                        }
+                        className="border-b border-border cursor-pointer hover:bg-secondary transition-colors"
                       >
-                        {t.totalLag.toLocaleString()}
-                      </span>
-                    </td>
-                    <td className="px-2.5 py-2 text-right text-muted-foreground font-mono whitespace-nowrap">
-                      {t.groups}
-                    </td>
-                  </tr>
-                ))}
+                        <td className="px-2.5 py-2 text-center text-muted-foreground font-mono text-xs">
+                          {idx + 1}
+                        </td>
+                        <td className="px-2.5 py-2 min-w-0">
+                          <CopyableText
+                            value={t.topic}
+                            textClassName="text-foreground"
+                            copyLabel="Copy Topic Name"
+                          />
+                        </td>
+                        <td className="px-2.5 py-2 text-right font-mono whitespace-nowrap">
+                          <span
+                            className={cn(
+                              t.totalLag > 10000
+                                ? "text-semantic-red font-semibold"
+                                : t.totalLag > 1000
+                                  ? "text-amber-400 font-medium"
+                                  : "text-foreground",
+                            )}
+                          >
+                            {t.totalLag.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="px-2.5 py-2 text-right text-muted-foreground font-mono whitespace-nowrap">
+                          {t.groups}
+                        </td>
+                      </tr>
+                    </RowContextMenu>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -160,6 +192,10 @@ export function LagRankingTab() {
           </div>
         </div>
       )}
+      <ClearLagDialog
+        target={clearTarget}
+        onClose={() => setClearTarget(null)}
+      />
     </div>
   );
 }

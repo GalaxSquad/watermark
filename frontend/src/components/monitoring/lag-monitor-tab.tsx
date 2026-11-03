@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
+import { useReadOnly } from "@/hooks/use-read-only";
 import { GetConsumerGroups } from "@/lib/wails-client";
-import { cn } from "@/lib/utils";
+import { cn, copyToClipboard } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -15,6 +16,8 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { CopyableText } from "@/components/shared/copyable-text";
+import { RowContextMenu, type RowContextMenuItem } from "@/components/shared/row-context-menu";
+import { ClearLagDialog, type ClearLagTarget } from "@/components/consumers/clear-lag-dialog";
 import { globMatch } from "@/lib/glob-match";
 import { useSettingsStore } from "@/store/settings";
 import { useGroupLagConfig } from "@/hooks/use-group-lag-config";
@@ -47,6 +50,8 @@ export function LagMonitorTab() {
   const clusterId = useSettingsStore((s) => s.activeClusterId);
   const { config, updateConfig } = useGroupLagConfig(clusterId);
   const [showFilters, setShowFilters] = useState(false);
+  const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
+  const isReadOnly = useReadOnly();
 
   const { data: groups } = useKafkaQuery(
     ["consumer-groups"],
@@ -130,46 +135,70 @@ export function LagMonitorTab() {
                       : g.totalLag > 1000
                         ? "text-amber-400 font-medium"
                         : "text-foreground";
+                  const contextItems: RowContextMenuItem[] = [
+                    {
+                      label: "Copy Group ID",
+                      icon: "copy",
+                      onSelect: () => copyToClipboard(g.groupId, "Group ID"),
+                    },
+                  ];
+                  if (!isReadOnly) {
+                    contextItems.push({
+                      label: "Clear Consumer Lag",
+                      icon: "chevrons-right",
+                      disabled: g.totalLag <= 0,
+                      separatorBefore: true,
+                      onSelect: () =>
+                        setClearTarget({
+                          type: "group",
+                          groupId: g.groupId,
+                          groupState: g.state,
+                          totalLag: g.totalLag,
+                        }),
+                    });
+                  }
+
                   return (
-                    <tr
-                      key={g.groupId}
-                      onClick={() =>
-                        navigate({
-                          to: "/consumers/$groupId",
-                          params: { groupId: g.groupId },
-                        })
-                      }
-                      className="border-b border-border cursor-pointer hover:bg-secondary transition-colors"
-                    >
-                      <td className="px-2.5 py-2 text-center text-muted-foreground font-mono text-xs">
-                        {idx + 1}
-                      </td>
-                      <td className="px-2.5 py-2 min-w-0">
-                        <CopyableText
-                          value={g.groupId}
-                          textClassName="text-foreground"
-                          copyLabel="Copy Group ID"
-                        />
-                      </td>
-                      <td className="px-2 py-2 whitespace-nowrap">
-                        <span
-                          className={cn(
-                            "inline-flex px-2 py-0.5 text-xs font-medium rounded border",
-                            STATE_STYLES[g.state] ?? STATE_STYLES.Unknown,
-                          )}
-                        >
-                          {g.state}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-right text-muted-foreground font-mono whitespace-nowrap">
-                        {g.members}
-                      </td>
-                      <td className="px-2.5 py-2 text-right font-mono whitespace-nowrap">
-                        <span className={lagClass}>
-                          {g.totalLag.toLocaleString()}
-                        </span>
-                      </td>
-                    </tr>
+                    <RowContextMenu key={g.groupId} items={contextItems}>
+                      <tr
+                        onClick={() =>
+                          navigate({
+                            to: "/consumers/$groupId",
+                            params: { groupId: g.groupId },
+                          })
+                        }
+                        className="border-b border-border cursor-pointer hover:bg-secondary transition-colors"
+                      >
+                        <td className="px-2.5 py-2 text-center text-muted-foreground font-mono text-xs">
+                          {idx + 1}
+                        </td>
+                        <td className="px-2.5 py-2 min-w-0">
+                          <CopyableText
+                            value={g.groupId}
+                            textClassName="text-foreground"
+                            copyLabel="Copy Group ID"
+                          />
+                        </td>
+                        <td className="px-2 py-2 whitespace-nowrap">
+                          <span
+                            className={cn(
+                              "inline-flex px-2 py-0.5 text-xs font-medium rounded border",
+                              STATE_STYLES[g.state] ?? STATE_STYLES.Unknown,
+                            )}
+                          >
+                            {g.state}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 text-right text-muted-foreground font-mono whitespace-nowrap">
+                          {g.members}
+                        </td>
+                        <td className="px-2.5 py-2 text-right font-mono whitespace-nowrap">
+                          <span className={lagClass}>
+                            {g.totalLag.toLocaleString()}
+                          </span>
+                        </td>
+                      </tr>
+                    </RowContextMenu>
                   );
                 })}
               </tbody>
@@ -180,6 +209,10 @@ export function LagMonitorTab() {
           </div>
         </div>
       )}
+      <ClearLagDialog
+        target={clearTarget}
+        onClose={() => setClearTarget(null)}
+      />
     </div>
   );
 }

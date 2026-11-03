@@ -9,6 +9,7 @@ export {
 export {
     AclEntry,
     Broker,
+    ClearLagResult,
     ClusterHealth,
     ConsumerGroup,
     ConsumerGroupDetail,

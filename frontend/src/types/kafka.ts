@@ -16,6 +16,7 @@ export type Message = kafka.Message;
 export type ProduceResult = kafka.ProduceResult;
 export type ProduceMessageRequest = kafka.ProduceMessageRequest;
 export type DeleteRecordsResult = kafka.DeleteRecordsResult;
+export type ClearLagResult = kafka.ClearLagResult;
 export type ConsumerGroup = kafka.ConsumerGroup;
 export type ConsumerGroupDetail = kafka.ConsumerGroupDetail;
 export type ConsumerGroupMember = kafka.ConsumerGroupMember;

@@ -1,11 +1,23 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/twmb/franz-go/pkg/kadm"
 	"golang.org/x/sync/errgroup"
 )
+
+// safeLag calls k.admin.Lag with panic recovery because franz-go can panic with
+// a nil pointer dereference inside loadCoordinators during cluster switches.
+func (k *KafkaService) safeLag(ctx context.Context, groupIDs ...string) (lags kadm.DescribedGroupLags, lagErr error) {
+	defer func() {
+		if r := recover(); r != nil {
+			lagErr = fmt.Errorf("recovered panic: %v", r)
+		}
+	}()
+	return k.admin.Lag(ctx, groupIDs...)
+}
 
 // safeGo runs fn inside an errgroup goroutine with panic recovery.
 // franz-go can panic with nil pointer dereference inside loadCoordinators
@@ -49,16 +61,7 @@ func (k *KafkaService) GetConsumerGroups() ([]ConsumerGroup, error) {
 	// Fetch lag + group description in a single kadm.Lag() call
 	// (kadm.Lag already calls DescribeGroups internally and populates gl.Members).
 	// Recover from franz-go loadCoordinators nil-pointer panics and fall back gracefully.
-	var lags kadm.DescribedGroupLags
-	var lagsErr error
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				lagsErr = fmt.Errorf("recovered panic: %v", r)
-			}
-		}()
-		lags, lagsErr = k.admin.Lag(ctx, groupIDs...)
-	}()
+	lags, lagsErr := k.safeLag(ctx, groupIDs...)
 
 	// Fallback: return groups without lag info if Lag() failed or panicked
 	if lagsErr != nil {
@@ -76,7 +79,7 @@ func (k *KafkaService) GetConsumerGroups() ([]ConsumerGroup, error) {
 
 	result := make([]ConsumerGroup, 0, len(groups))
 	lags.Each(func(gl kadm.DescribedGroupLag) {
-		totalLag := gl.Lag.Total()
+		totalLag := effectiveGroupTotalLag(gl)
 
 		result = append(result, ConsumerGroup{
 			GroupID:  gl.Group,
@@ -151,7 +154,7 @@ func (k *KafkaService) GetConsumerGroupDetail(groupID string) (*ConsumerGroupDet
 	}
 
 	// Get lag details
-	lags, err := k.admin.Lag(ctx, groupID)
+	lags, err := k.safeLag(ctx, groupID)
 	if err != nil {
 		return nil, fmt.Errorf("group lag: %w", err)
 	}
@@ -159,13 +162,14 @@ func (k *KafkaService) GetConsumerGroupDetail(groupID string) (*ConsumerGroupDet
 	var offsets []ConsumerGroupOffset
 	lags.Each(func(gl kadm.DescribedGroupLag) {
 		for _, ml := range gl.Lag.Sorted() {
+			currentOffset, lag := effectivePartitionLag(ml)
 			offsets = append(offsets, ConsumerGroupOffset{
 				Topic:         ml.Topic,
 				Partition:     ml.Partition,
 				Host:          partHost[partKey{ml.Topic, ml.Partition}],
-				CurrentOffset: ml.Commit.At,
+				CurrentOffset: currentOffset,
 				EndOffset:     ml.End.Offset,
-				Lag:           ml.Lag,
+				Lag:           lag,
 			})
 		}
 	})
@@ -245,16 +249,7 @@ func (k *KafkaService) GetAllGroupsLagDetail() ([]TopicLagSummary, error) {
 		groupIDs = append(groupIDs, g.Group)
 	}
 
-	var lags kadm.DescribedGroupLags
-	var lagErr error
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				lagErr = fmt.Errorf("recovered panic: %v", r)
-			}
-		}()
-		lags, lagErr = k.admin.Lag(ctx, groupIDs...)
-	}()
+	lags, lagErr := k.safeLag(ctx, groupIDs...)
 	if lagErr != nil {
 		return []TopicLagSummary{}, nil // graceful fallback
 	}
@@ -273,7 +268,8 @@ func (k *KafkaService) GetAllGroupsLagDetail() ([]TopicLagSummary, error) {
 				entry = &topicAgg{groups: make(map[string]bool)}
 				agg[ml.Topic] = entry
 			}
-			entry.totalLag += ml.Lag
+			_, lag := effectivePartitionLag(ml)
+			entry.totalLag += lag
 			entry.groups[gl.Group] = true
 		}
 	})
@@ -291,4 +287,36 @@ func (k *KafkaService) GetAllGroupsLagDetail() ([]TopicLagSummary, error) {
 		return []TopicLagSummary{}, nil
 	}
 	return result, nil
+}
+
+// effectivePartitionLag returns the effective current offset and remaining lag for a partition,
+// accounting for truncated records where Start.Offset (LowWatermark) has advanced past Commit.At.
+func effectivePartitionLag(ml kadm.GroupMemberLag) (currentOffset int64, lag int64) {
+	currentOffset = ml.Commit.At
+	lag = ml.Lag
+	if lag < 0 {
+		return currentOffset, 0
+	}
+	if ml.Start.Err == nil && ml.Start.Offset > currentOffset {
+		currentOffset = ml.Start.Offset
+		if ml.End.Err == nil && ml.End.Offset >= 0 {
+			lag = ml.End.Offset - currentOffset
+		}
+	}
+	if lag < 0 {
+		lag = 0
+	}
+	return currentOffset, lag
+}
+
+// effectiveGroupTotalLag sums effectivePartitionLag across all topics and partitions in gl.Lag.
+func effectiveGroupTotalLag(gl kadm.DescribedGroupLag) int64 {
+	var total int64
+	for _, topicParts := range gl.Lag {
+		for _, ml := range topicParts {
+			_, lag := effectivePartitionLag(ml)
+			total += lag
+		}
+	}
+	return total
 }

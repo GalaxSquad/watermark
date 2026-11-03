@@ -40,6 +40,8 @@ export {
   GetConsumerGroupDetail,
   GetAllGroupsLagDetail,
   ResetConsumerGroupOffsets,
+  ClearConsumerGroupLag,
+  ClearTopicLag,
   DeleteConsumerGroup,
   ClearCache,
   UpdateReadOnly,

@@ -30,7 +30,7 @@ func (k *KafkaService) GetTopicConsumers(topicName string) ([]ConsumerGroup, err
 		return []ConsumerGroup{}, nil
 	}
 
-	lags, err := k.admin.Lag(ctx, groupIDs...)
+	lags, err := k.safeLag(ctx, groupIDs...)
 	if err != nil {
 		return nil, fmt.Errorf("topic consumers lag: %w", err)
 	}
@@ -45,13 +45,14 @@ func (k *KafkaService) GetTopicConsumers(topicName string) ([]ConsumerGroup, err
 
 		var topicLag int64
 		for _, ml := range partitionLags {
-			topicLag += ml.Lag
+			_, lag := effectivePartitionLag(ml)
+			topicLag += lag
 		}
 
 		result = append(result, ConsumerGroup{
 			GroupID:  gl.Group,
 			State:    mapGroupState(gl.State),
-			Members:  0,
+			Members:  len(gl.Members),
 			TotalLag: topicLag,
 		})
 	})

@@ -1,14 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { MetricCard } from "@/components/shared/metric-card";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CopyableText } from "@/components/shared/copyable-text";
+import { RowContextMenu, type RowContextMenuItem } from "@/components/shared/row-context-menu";
+import { ClearLagDialog, type ClearLagTarget } from "@/components/consumers/clear-lag-dialog";
 import { Icon } from "@/components/ui/icon";
-import { cn, formatBytes, formatNumber } from "@/lib/utils";
+import { cn, copyToClipboard, formatBytes, formatNumber } from "@/lib/utils";
 import type { Broker } from "@/types/kafka";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
+import { useReadOnly } from "@/hooks/use-read-only";
 import { GetDashboardData, GetTopics, GetConsumerGroups } from "@/lib/wails-client";
 
 /**
@@ -132,6 +135,8 @@ export function BrokerTable() {
 /* ====== Quick Insights (Top Topics by Size + Top Consumer Lag) ====== */
 export function DashboardQuickInsights() {
   const navigate = useNavigate();
+  const isReadOnly = useReadOnly();
+  const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
   const { data: topics = [] } = useKafkaQuery(["topics"], GetTopics, {
     staleTime: 30_000,
   });
@@ -238,36 +243,63 @@ export function DashboardQuickInsights() {
                   : g.totalLag >= 1000
                     ? "text-amber-400 font-medium"
                     : "text-foreground";
+              const contextItems: RowContextMenuItem[] = [
+                {
+                  label: "Copy Group ID",
+                  icon: "copy",
+                  onSelect: () => copyToClipboard(g.groupId, "Group ID"),
+                },
+              ];
+              if (!isReadOnly) {
+                contextItems.push({
+                  label: "Clear Consumer Lag",
+                  icon: "chevrons-right",
+                  disabled: g.totalLag <= 0,
+                  separatorBefore: true,
+                  onSelect: () =>
+                    setClearTarget({
+                      type: "group",
+                      groupId: g.groupId,
+                      groupState: g.state,
+                      totalLag: g.totalLag,
+                    }),
+                });
+              }
               return (
-                <div
-                  key={g.groupId}
-                  onClick={() =>
-                    navigate({
-                      to: "/consumers/$groupId",
-                      params: { groupId: g.groupId },
-                    })
-                  }
-                  className="flex items-center justify-between gap-3 py-2 px-2 -mx-2 rounded-md cursor-pointer hover:bg-secondary transition-colors"
-                >
-                  <CopyableText
-                    value={g.groupId}
-                    textClassName="text-foreground text-xs"
-                    copyLabel="Copy Group ID"
-                  />
-                  <div className="flex items-center gap-2.5 shrink-0 text-xs font-mono">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground font-sans">
-                      {g.state}
-                    </span>
-                    <span className={cn("w-20 text-right", lagColor)}>
-                      {formatNumber(g.totalLag)}
-                    </span>
+                <RowContextMenu key={g.groupId} items={contextItems}>
+                  <div
+                    onClick={() =>
+                      navigate({
+                        to: "/consumers/$groupId",
+                        params: { groupId: g.groupId },
+                      })
+                    }
+                    className="flex items-center justify-between gap-3 py-2 px-2 -mx-2 rounded-md cursor-pointer hover:bg-secondary transition-colors"
+                  >
+                    <CopyableText
+                      value={g.groupId}
+                      textClassName="text-foreground text-xs"
+                      copyLabel="Copy Group ID"
+                    />
+                    <div className="flex items-center gap-2.5 shrink-0 text-xs font-mono">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground font-sans">
+                        {g.state}
+                      </span>
+                      <span className={cn("w-20 text-right", lagColor)}>
+                        {formatNumber(g.totalLag)}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </RowContextMenu>
               );
             })}
           </div>
         )}
       </div>
+      <ClearLagDialog
+        target={clearTarget}
+        onClose={() => setClearTarget(null)}
+      />
     </div>
   );
 }

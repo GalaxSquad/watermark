@@ -8,6 +8,7 @@ import { ActiveMembersTable } from "@/components/consumers/active-members-table"
 import { OffsetsLagTable } from "@/components/consumers/offsets-lag-table";
 import { ConsumerActionDropdown } from "@/components/consumers/consumer-action-dropdown";
 import { DropGroupDialog } from "@/components/consumers/drop-group-dialog";
+import { ClearLagDialog, type ClearLagTarget } from "@/components/consumers/clear-lag-dialog";
 import { RefreshButton } from "@/components/shared/refresh-button";
 import { CopyableText } from "@/components/shared/copyable-text";
 import { useKafkaQuery, clusterQueryKey } from "@/hooks/use-kafka-query";
@@ -26,6 +27,7 @@ export function ConsumerDetailPage() {
   const { loadConfig } = useLagAlertsStore();
 
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
 
   const { data: detail } = useKafkaQuery(
     ["consumer-group-detail", groupId],
@@ -34,6 +36,7 @@ export function ConsumerDetailPage() {
 
   const groupState = (detail?.state ?? "Unknown") as ConsumerGroupState;
   const canDrop = groupState === "Empty" || groupState === "Dead";
+  const totalLag = detail?.offsets.reduce((sum, o) => sum + o.lag, 0) ?? 0;
 
   const handleDropSuccess = async (droppedId: string) => {
     let cascadeWarning: string | null = null;
@@ -92,6 +95,15 @@ export function ConsumerDetailPage() {
             <ConsumerActionDropdown
               groupId={groupId}
               canDrop={canDrop}
+              canClearLag={totalLag > 0}
+              onClearLag={() =>
+                setClearTarget({
+                  type: "group",
+                  groupId,
+                  groupState,
+                  totalLag,
+                })
+              }
               onDropGroup={() => setDropTarget(groupId)}
             />
           )}
@@ -102,11 +114,15 @@ export function ConsumerDetailPage() {
         groupId={groupId}
         state={groupState}
         coordinator={detail?.coordinator ?? 0}
-        totalLag={detail?.offsets.reduce((sum, o) => sum + o.lag, 0) ?? 0}
+        totalLag={totalLag}
       />
 
       <div className="space-y-6">
-        <OffsetsLagTable offsets={detail?.offsets ?? []} />
+        <OffsetsLagTable
+          groupId={groupId}
+          groupState={groupState}
+          offsets={detail?.offsets ?? []}
+        />
         <ActiveMembersTable members={detail?.members ?? []} />
       </div>
 
@@ -114,6 +130,10 @@ export function ConsumerDetailPage() {
         groupId={dropTarget}
         onClose={() => setDropTarget(null)}
         onSuccess={handleDropSuccess}
+      />
+      <ClearLagDialog
+        target={clearTarget}
+        onClose={() => setClearTarget(null)}
       />
     </div>
   );

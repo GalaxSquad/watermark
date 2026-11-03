@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
 import { DataTable } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { cn } from "@/lib/utils";
-import { formatNumber } from "@/lib/utils";
+import { ClearLagDialog, type ClearLagTarget } from "@/components/consumers/clear-lag-dialog";
+import type { RowContextMenuItem } from "@/components/shared/row-context-menu";
+import { cn, copyToClipboard, formatNumber } from "@/lib/utils";
 import type { ConsumerGroup, ConsumerGroupState } from "@/types/kafka";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
+import { useReadOnly } from "@/hooks/use-read-only";
 import { GetTopicConsumers } from "@/lib/wails-client";
 
 const STATE_MAP: Record<ConsumerGroupState, "healthy" | "rebalancing" | "dead" | "empty"> = {
@@ -62,11 +65,47 @@ export function ConsumersTab({ topicName }: ConsumersTabProps) {
     ["topic-consumers", topicName],
     () => GetTopicConsumers(topicName),
   );
+  const isReadOnly = useReadOnly();
+  const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
+
+  const getRowContextMenu = (group: ConsumerGroup): RowContextMenuItem[] => {
+    const items: RowContextMenuItem[] = [
+      {
+        label: "Copy Group ID",
+        icon: "copy",
+        onSelect: () => copyToClipboard(group.groupId, "Group ID"),
+      },
+    ];
+    if (!isReadOnly) {
+      items.push({
+        label: "Clear Consumer Lag on Topic",
+        icon: "chevrons-right",
+        disabled: group.totalLag <= 0,
+        separatorBefore: true,
+        onSelect: () =>
+          setClearTarget({
+            type: "groupTopic",
+            groupId: group.groupId,
+            topicName,
+            groupState: group.state,
+            totalLag: group.totalLag,
+          }),
+      });
+    }
+    return items;
+  };
 
   return (
-    <DataTable
-      data={consumers}
-      columns={columns}
-    />
+    <>
+      <DataTable
+        data={consumers}
+        columns={columns}
+        getRowContextMenu={getRowContextMenu}
+      />
+      <ClearLagDialog
+        target={clearTarget}
+        onClose={() => setClearTarget(null)}
+      />
+    </>
   );
 }

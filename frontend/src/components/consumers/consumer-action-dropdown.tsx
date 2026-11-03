@@ -29,11 +29,20 @@ import type { AlertRule } from "@/types/lag-alerts";
 interface ConsumerActionDropdownProps {
   groupId: string;
   onDropGroup: () => void;
+  onClearLag?: () => void;
+  canClearLag?: boolean;
   canDrop: boolean;
   disabled?: boolean;
 }
 
-export function ConsumerActionDropdown({ groupId, onDropGroup, canDrop, disabled }: ConsumerActionDropdownProps) {
+export function ConsumerActionDropdown({
+  groupId,
+  onDropGroup,
+  onClearLag,
+  canClearLag = false,
+  canDrop,
+  disabled,
+}: ConsumerActionDropdownProps) {
   const [alertOpen, setAlertOpen] = useState(false);
   const [warningLag, setWarningLag] = useState("");
   const [criticalLag, setCriticalLag] = useState("");
@@ -123,6 +132,15 @@ export function ConsumerActionDropdown({ groupId, onDropGroup, canDrop, disabled
             <Icon name="bell" className="size-3.5" />
             Set Alert
           </DropdownMenuItem>
+          {onClearLag && (
+            <DropdownMenuItem
+              disabled={!canClearLag}
+              onSelect={canClearLag ? onClearLag : undefined}
+            >
+              <Icon name="chevrons-right" className="size-3.5" tone={canClearLag ? "warning" : undefined} />
+              Clear Consumer Lag
+            </DropdownMenuItem>
+          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
