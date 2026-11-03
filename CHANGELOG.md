@@ -3,6 +3,13 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.1] - 2026-11-03
+
+- Clear consumer and topic lag across Dashboard, Consumers, Topics, and Lag Monitor/Ranking views
+- Smart lag clearing via `CommitOffsets` for inactive groups and partition-scoped `DeleteRecords` for active groups
+- Accurate effective lag calculation when partition start offset advances past committed offset
+- Reset cluster edit form state when switching active clusters
+
 ## [1.2.0] - 2026-10-28
 
 - Migrate runtime to Wails v3 with per-cluster warm connection pool
