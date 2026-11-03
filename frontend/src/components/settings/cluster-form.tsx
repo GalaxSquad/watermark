@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { SaveCluster, TestConnection, GetCluster, UpdateReadOnly, DisconnectCluster } from "@/lib/wails-client";
 import * as config from "../../../bindings/watermark-01/internal/config/models";
@@ -45,12 +45,35 @@ export function ClusterForm({ clusterId, clusterName, onClose }: ClusterFormProp
   const [testStatus, setTestStatus] = useState<TestUIState>("idle");
   const [testMessage, setTestMessage] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [loaded, setLoaded] = useState(isNew);
 
-  // Load existing cluster data for edit mode
-  if (!isNew && !loaded) {
+  // Load existing cluster data when clusterId changes
+  useEffect(() => {
+    setTestStatus("idle");
+    setTestMessage("");
+    setSaveError("");
+
+    if (isNew) {
+      setForm({
+        name: clusterName || "",
+        bootstrapServers: "",
+        labelColor: "green",
+        securityProtocol: "NONE",
+        saslMechanism: "PLAIN",
+        username: "",
+        password: "",
+        readOnly: false,
+        schemaRegistryUrl: "",
+        schemaRegistryPassword: "",
+        awsProfile: "",
+        awsRegion: "",
+      });
+      return;
+    }
+
+    let cancelled = false;
     GetCluster(clusterId)
       .then((cluster) => {
+        if (cancelled) return;
         setForm({
           name: cluster.name,
           bootstrapServers: cluster.bootstrapServers,
@@ -65,10 +88,13 @@ export function ClusterForm({ clusterId, clusterName, onClose }: ClusterFormProp
           awsProfile: cluster.awsProfile || "",
           awsRegion: cluster.awsRegion || "",
         });
-        setLoaded(true);
       })
-      .catch(() => setLoaded(true));
-  }
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clusterId, isNew, clusterName]);
 
   const handleTestConnection = async () => {
     if (!form.bootstrapServers.trim()) {

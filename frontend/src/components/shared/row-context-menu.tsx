@@ -15,6 +15,7 @@ export interface RowContextMenuItem {
   onSelect: () => void;
   variant?: "default" | "destructive";
   separatorBefore?: boolean;
+  disabled?: boolean;
 }
 
 interface RowContextMenuProps {
@@ -32,7 +33,11 @@ export function RowContextMenu({ children, items }: RowContextMenuProps) {
         {items.map((item) => (
           <Fragment key={item.label}>
             {item.separatorBefore && <ContextMenuSeparator />}
-            <ContextMenuItem onSelect={item.onSelect} variant={item.variant}>
+            <ContextMenuItem
+              onSelect={item.onSelect}
+              variant={item.variant}
+              disabled={item.disabled}
+            >
               <Icon name={item.icon} className="size-3.5" />
               {item.label}
             </ContextMenuItem>

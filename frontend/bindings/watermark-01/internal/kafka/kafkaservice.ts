@@ -25,6 +25,32 @@ export function ClearCache(): $CancellablePromise<void> {
 }
 
 /**
+ * ClearConsumerGroupLag clears lag for the specified consumer group up to the current EndOffset
+ * on partitions where lag > 0.
+ *   - topicName == "" clears all lagging topics for the group; otherwise only topicName.
+ *   - partition < 0 clears all lagging partitions; otherwise only that partition.
+ *   - For Empty/Dead groups: commits EndOffset directly via CommitOffsets (leaving topic records untouched).
+ *   - For Stable/Rebalancing groups: truncates lagging records up to EndOffset via DeleteRecords on
+ *     ONLY the lagging partitions of this consumer group so active consumers skip them immediately.
+ */
+export function ClearConsumerGroupLag(groupID: string, topicName: string, partition: number): $CancellablePromise<$models.ClearLagResult[]> {
+    return $Call.ByID(2025927965, groupID, topicName, partition).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
+/**
+ * ClearTopicLag clears ALL lag on the given topic across all consumer groups.
+ * It truncates lagging records on the topic partitions up to EndOffset via DeleteRecords
+ * and also advances committed offsets to EndOffset for inactive consumer groups consuming the topic.
+ */
+export function ClearTopicLag(topicName: string): $CancellablePromise<$models.ClearLagResult[]> {
+    return $Call.ByID(3762875533, topicName).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
+/**
  * Connect switches to or establishes a connection to the Kafka cluster identified by profileID.
  * If a warm client already exists in the per-cluster pool and passes a fast health check,
  * it is reused immediately while keeping previously used clusters warm in the pool until their TTL expires.
@@ -39,7 +65,7 @@ export function Connect(profileID: string): $CancellablePromise<void> {
  */
 export function ConsumeMessages(topicName: string, partition: number, startOffset: number, limit: number): $CancellablePromise<$models.Message[]> {
     return $Call.ByID(3390033879, topicName, partition, startOffset, limit).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType3($result);
     });
 }
 
@@ -50,7 +76,7 @@ export function ConsumeMessages(topicName: string, partition: number, startOffse
  */
 export function ConsumeMessagesFromTimestamp(topicName: string, partition: number, timestampMs: number, limit: number): $CancellablePromise<$models.Message[]> {
     return $Call.ByID(2745423721, topicName, partition, timestampMs, limit).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType3($result);
     });
 }
 
@@ -76,7 +102,7 @@ export function DeleteConsumerGroup(groupID: string): $CancellablePromise<void> 
  */
 export function DeleteRecordsBefore(topicName: string, partition: number, beforeOffset: number): $CancellablePromise<$models.DeleteRecordsResult[]> {
     return $Call.ByID(3212003641, topicName, partition, beforeOffset).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType5($result);
     });
 }
 
@@ -86,7 +112,7 @@ export function DeleteRecordsBefore(topicName: string, partition: number, before
  */
 export function DeleteRecordsBeforeTimestamp(topicName: string, timestampMs: number): $CancellablePromise<$models.DeleteRecordsResult[]> {
     return $Call.ByID(4207083255, topicName, timestampMs).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType5($result);
     });
 }
 
@@ -134,7 +160,7 @@ export function GetActiveCluster(): $CancellablePromise<string> {
  */
 export function GetAllGroupsLagDetail(): $CancellablePromise<$models.TopicLagSummary[]> {
     return $Call.ByID(1407045689).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType7($result);
     });
 }
 
@@ -144,7 +170,7 @@ export function GetAllGroupsLagDetail(): $CancellablePromise<$models.TopicLagSum
  */
 export function GetBrokers(): $CancellablePromise<$models.Broker[]> {
     return $Call.ByID(1277274961).then(($result: any) => {
-        return $$createType7($result);
+        return $$createType9($result);
     });
 }
 
@@ -154,7 +180,7 @@ export function GetBrokers(): $CancellablePromise<$models.Broker[]> {
  */
 export function GetClusterHealth(): $CancellablePromise<$models.ClusterHealth | null> {
     return $Call.ByID(3914018651).then(($result: any) => {
-        return $$createType9($result);
+        return $$createType11($result);
     });
 }
 
@@ -163,7 +189,7 @@ export function GetClusterHealth(): $CancellablePromise<$models.ClusterHealth | 
  */
 export function GetConsumerGroupDetail(groupID: string): $CancellablePromise<$models.ConsumerGroupDetail | null> {
     return $Call.ByID(1462297437, groupID).then(($result: any) => {
-        return $$createType11($result);
+        return $$createType13($result);
     });
 }
 
@@ -173,7 +199,7 @@ export function GetConsumerGroupDetail(groupID: string): $CancellablePromise<$mo
  */
 export function GetConsumerGroups(): $CancellablePromise<$models.ConsumerGroup[]> {
     return $Call.ByID(786605133).then(($result: any) => {
-        return $$createType13($result);
+        return $$createType15($result);
     });
 }
 
@@ -184,7 +210,7 @@ export function GetConsumerGroups(): $CancellablePromise<$models.ConsumerGroup[]
  */
 export function GetDashboardData(): $CancellablePromise<$models.DashboardData | null> {
     return $Call.ByID(2278645623).then(($result: any) => {
-        return $$createType15($result);
+        return $$createType17($result);
     });
 }
 
@@ -193,7 +219,7 @@ export function GetDashboardData(): $CancellablePromise<$models.DashboardData | 
  */
 export function GetPooledClusters(): $CancellablePromise<string[]> {
     return $Call.ByID(4258144385).then(($result: any) => {
-        return $$createType16($result);
+        return $$createType18($result);
     });
 }
 
@@ -202,7 +228,7 @@ export function GetPooledClusters(): $CancellablePromise<string[]> {
  */
 export function GetTopic(name: string): $CancellablePromise<$models.Topic | null> {
     return $Call.ByID(1419411376, name).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType20($result);
     });
 }
 
@@ -211,7 +237,7 @@ export function GetTopic(name: string): $CancellablePromise<$models.Topic | null
  */
 export function GetTopicACLs(topicName: string): $CancellablePromise<$models.AclEntry[]> {
     return $Call.ByID(3041456021, topicName).then(($result: any) => {
-        return $$createType20($result);
+        return $$createType22($result);
     });
 }
 
@@ -220,7 +246,7 @@ export function GetTopicACLs(topicName: string): $CancellablePromise<$models.Acl
  */
 export function GetTopicConfigs(topicName: string): $CancellablePromise<$models.TopicConfig[]> {
     return $Call.ByID(3414049335, topicName).then(($result: any) => {
-        return $$createType22($result);
+        return $$createType24($result);
     });
 }
 
@@ -229,7 +255,7 @@ export function GetTopicConfigs(topicName: string): $CancellablePromise<$models.
  */
 export function GetTopicConsumers(topicName: string): $CancellablePromise<$models.ConsumerGroup[]> {
     return $Call.ByID(3085325117, topicName).then(($result: any) => {
-        return $$createType13($result);
+        return $$createType15($result);
     });
 }
 
@@ -238,7 +264,7 @@ export function GetTopicConsumers(topicName: string): $CancellablePromise<$model
  */
 export function GetTopicPartitions(topicName: string): $CancellablePromise<$models.Partition[]> {
     return $Call.ByID(855483519, topicName).then(($result: any) => {
-        return $$createType24($result);
+        return $$createType26($result);
     });
 }
 
@@ -248,7 +274,7 @@ export function GetTopicPartitions(topicName: string): $CancellablePromise<$mode
  */
 export function GetTopics(): $CancellablePromise<$models.Topic[]> {
     return $Call.ByID(4063698937).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -270,7 +296,7 @@ export function ProduceMessage(topicName: string, partition: number, key: string
  */
 export function ProduceMessages(topicName: string, messages: $models.ProduceMessageRequest[]): $CancellablePromise<$models.ProduceResult[]> {
     return $Call.ByID(277774337, topicName, messages).then(($result: any) => {
-        return $$createType27($result);
+        return $$createType29($result);
     });
 }
 
@@ -280,7 +306,7 @@ export function ProduceMessages(topicName: string, messages: $models.ProduceMess
  */
 export function PurgeTopic(topicName: string): $CancellablePromise<$models.DeleteRecordsResult[]> {
     return $Call.ByID(1976854157, topicName).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType5($result);
     });
 }
 
@@ -324,31 +350,33 @@ export function UpdateReadOnly(readOnly: boolean): $CancellablePromise<void> {
 }
 
 // Private type creation functions
-const $$createType0 = $models.Message.createFrom;
+const $$createType0 = $models.ClearLagResult.createFrom;
 const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = $models.DeleteRecordsResult.createFrom;
+const $$createType2 = $models.Message.createFrom;
 const $$createType3 = $Create.Array($$createType2);
-const $$createType4 = $models.TopicLagSummary.createFrom;
+const $$createType4 = $models.DeleteRecordsResult.createFrom;
 const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = $models.Broker.createFrom;
+const $$createType6 = $models.TopicLagSummary.createFrom;
 const $$createType7 = $Create.Array($$createType6);
-const $$createType8 = $models.ClusterHealth.createFrom;
-const $$createType9 = $Create.Nullable($$createType8);
-const $$createType10 = $models.ConsumerGroupDetail.createFrom;
+const $$createType8 = $models.Broker.createFrom;
+const $$createType9 = $Create.Array($$createType8);
+const $$createType10 = $models.ClusterHealth.createFrom;
 const $$createType11 = $Create.Nullable($$createType10);
-const $$createType12 = $models.ConsumerGroup.createFrom;
-const $$createType13 = $Create.Array($$createType12);
-const $$createType14 = $models.DashboardData.createFrom;
-const $$createType15 = $Create.Nullable($$createType14);
-const $$createType16 = $Create.Array($Create.Any);
-const $$createType17 = $models.Topic.createFrom;
-const $$createType18 = $Create.Nullable($$createType17);
-const $$createType19 = $models.AclEntry.createFrom;
-const $$createType20 = $Create.Array($$createType19);
-const $$createType21 = $models.TopicConfig.createFrom;
+const $$createType12 = $models.ConsumerGroupDetail.createFrom;
+const $$createType13 = $Create.Nullable($$createType12);
+const $$createType14 = $models.ConsumerGroup.createFrom;
+const $$createType15 = $Create.Array($$createType14);
+const $$createType16 = $models.DashboardData.createFrom;
+const $$createType17 = $Create.Nullable($$createType16);
+const $$createType18 = $Create.Array($Create.Any);
+const $$createType19 = $models.Topic.createFrom;
+const $$createType20 = $Create.Nullable($$createType19);
+const $$createType21 = $models.AclEntry.createFrom;
 const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = $models.Partition.createFrom;
+const $$createType23 = $models.TopicConfig.createFrom;
 const $$createType24 = $Create.Array($$createType23);
-const $$createType25 = $Create.Array($$createType17);
-const $$createType26 = $models.ProduceResult.createFrom;
-const $$createType27 = $Create.Array($$createType26);
+const $$createType25 = $models.Partition.createFrom;
+const $$createType26 = $Create.Array($$createType25);
+const $$createType27 = $Create.Array($$createType19);
+const $$createType28 = $models.ProduceResult.createFrom;
+const $$createType29 = $Create.Array($$createType28);

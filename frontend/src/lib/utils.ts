@@ -1,9 +1,22 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { toast } from "sonner";
 
 /** Merge Tailwind classes with clsx conditional support */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/** Copy text to clipboard and show a toast notification on success or failure */
+export function copyToClipboard(text: string, label: string): void {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      toast.success(`Copied ${label}`);
+    })
+    .catch(() => {
+      toast.error(`Failed to copy ${label}`);
+    });
 }
 
 /** Format bytes to human-readable string (e.g. 1024 → "1.0 KB") */

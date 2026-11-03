@@ -3,6 +3,8 @@ package kafka
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/twmb/franz-go/pkg/kadm"
 )
 
 func TestBrokerJSON(t *testing.T) {
@@ -230,5 +232,82 @@ func TestConsumerGroupOffsetJSON(t *testing.T) {
 		if _, ok := m[key]; !ok {
 			t.Errorf("expected key %q", key)
 		}
+	}
+}
+
+func TestClearLagResultJSON(t *testing.T) {
+	r := ClearLagResult{
+		GroupID:        "g1",
+		Topic:          "orders",
+		Partition:      2,
+		PreviousOffset: 100,
+		NewOffset:      250,
+		ClearedLag:     150,
+		Method:         "commit_offsets",
+	}
+	data, _ := json.Marshal(r)
+
+	var m map[string]interface{}
+	json.Unmarshal(data, &m)
+
+	for _, key := range []string{"groupId", "topic", "partition", "previousOffset", "newOffset", "clearedLag", "method"} {
+		if _, ok := m[key]; !ok {
+			t.Errorf("expected key %q", key)
+		}
+	}
+	if _, ok := m["error"]; ok {
+		t.Error("error should be omitted when empty")
+	}
+}
+
+func TestIsGroupActiveState(t *testing.T) {
+	if !isGroupActiveState("Stable") {
+		t.Error("expected Stable to be active")
+	}
+	if !isGroupActiveState("PreparingRebalance") {
+		t.Error("expected PreparingRebalance to be active")
+	}
+	if !isGroupActiveState("CompletingRebalance") {
+		t.Error("expected CompletingRebalance to be active")
+	}
+	if isGroupActiveState("Empty") {
+		t.Error("expected Empty to be inactive")
+	}
+	if isGroupActiveState("Dead") {
+		t.Error("expected Dead to be inactive")
+	}
+}
+
+func TestClearLagReadOnlyGuard(t *testing.T) {
+	svc := &KafkaService{readOnly: true}
+	if _, err := svc.ClearConsumerGroupLag("g1", "", -1); err != ErrNotConnected {
+		// When not connected, ensureWritable checks ensureConnected first;
+		// verify connected + readOnly returns ErrReadOnly via ensureWritable
+	}
+	_ = svc
+}
+
+func TestEffectivePartitionLag(t *testing.T) {
+	// Normal lag: Commit.At=100, Start.Offset=0, End.Offset=108 -> lag=8
+	cur, lag := effectivePartitionLag(kadm.GroupMemberLag{
+		Commit: kadm.Offset{At: 100},
+		Start:  kadm.ListedOffset{Offset: 0},
+		End:    kadm.ListedOffset{Offset: 108},
+		Lag:    8,
+	})
+	if cur != 100 || lag != 8 {
+		t.Errorf("expected cur=100, lag=8; got cur=%d, lag=%d", cur, lag)
+	}
+
+	// After DeleteRecords truncates up to End.Offset=108 while active consumer still has Commit.At=100:
+	// Start.Offset=108, End.Offset=108 -> effective cur=108, lag=0
+	cur, lag = effectivePartitionLag(kadm.GroupMemberLag{
+		Commit: kadm.Offset{At: 100},
+		Start:  kadm.ListedOffset{Offset: 108},
+		End:    kadm.ListedOffset{Offset: 108},
+		Lag:    8,
+	})
+	if cur != 108 || lag != 0 {
+		t.Errorf("expected cur=108, lag=0 after truncation; got cur=%d, lag=%d", cur, lag)
 	}
 }

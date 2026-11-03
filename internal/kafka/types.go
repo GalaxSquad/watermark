@@ -129,3 +129,15 @@ type TopicLagSummary struct {
 	TotalLag int64  `json:"totalLag"`
 	Groups   int    `json:"groups"`
 }
+
+// ClearLagResult reports the outcome per partition after clearing consumer lag.
+type ClearLagResult struct {
+	GroupID        string `json:"groupId"`
+	Topic          string `json:"topic"`
+	Partition      int32  `json:"partition"`
+	PreviousOffset int64  `json:"previousOffset"`
+	NewOffset      int64  `json:"newOffset"`
+	ClearedLag     int64  `json:"clearedLag"`
+	Method         string `json:"method"` // "commit_offsets" or "delete_records"
+	Error          string `json:"error,omitempty"`
+}

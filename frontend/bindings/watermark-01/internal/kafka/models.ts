@@ -90,6 +90,59 @@ export class Broker {
 }
 
 /**
+ * ClearLagResult reports the outcome per partition after clearing consumer lag.
+ */
+export class ClearLagResult {
+    "groupId": string;
+    "topic": string;
+    "partition": number;
+    "previousOffset": number;
+    "newOffset": number;
+    "clearedLag": number;
+
+    /**
+     * "commit_offsets" or "delete_records"
+     */
+    "method": string;
+    "error"?: string;
+
+    /** Creates a new ClearLagResult instance. */
+    constructor($$source: Partial<ClearLagResult> = {}) {
+        if (!("groupId" in $$source)) {
+            this["groupId"] = "";
+        }
+        if (!("topic" in $$source)) {
+            this["topic"] = "";
+        }
+        if (!("partition" in $$source)) {
+            this["partition"] = 0;
+        }
+        if (!("previousOffset" in $$source)) {
+            this["previousOffset"] = 0;
+        }
+        if (!("newOffset" in $$source)) {
+            this["newOffset"] = 0;
+        }
+        if (!("clearedLag" in $$source)) {
+            this["clearedLag"] = 0;
+        }
+        if (!("method" in $$source)) {
+            this["method"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ClearLagResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ClearLagResult {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ClearLagResult($$parsedSource as Partial<ClearLagResult>);
+    }
+}
+
+/**
  * ClusterHealth represents overall cluster status metrics for the Dashboard.
  */
 export class ClusterHealth {
