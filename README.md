@@ -22,7 +22,22 @@
 | **Schema Registry** | View and manage Avro/JSON/Protobuf schemas |
 | **ACL Management** | Browse and manage Kafka ACL rules |
 | **Settings** | Multi-cluster connection profiles with secure credential storage |
+| **MCP Server** | Embedded Model Context Protocol server for AI agents with read-only cluster protection |
 | **Auto-Update** | Seamless binary updates via `go-rocket-update` |
+
+## Installation
+
+### macOS (Unsigned App)
+
+Because Watermark is currently distributed without an Apple Developer code-signing certificate, macOS Gatekeeper may display a warning or block execution (*"Watermark is damaged and can't be opened"* or unidentified developer prompt).
+
+1. Download the latest macOS release from [Releases](https://github.com/GalaxSquad/watermark/releases).
+2. Move `Watermark.app` into `/Applications`.
+3. Clear the quarantine extended attribute via Terminal:
+   ```bash
+   xattr -cr /Applications/Watermark.app
+   ```
+4. Open Watermark from Launchpad or Applications.
 
 ## Tech Stack
 
@@ -33,6 +48,7 @@
 | Desktop Framework | `wails/v3` | Native desktop app with embedded webview |
 | Kafka Client | `twmb/franz-go` | Pure-Go Kafka client (no C-bindings) |
 | Secure Storage | `zalando/go-keyring` | macOS Keychain / Windows Credential Manager |
+| MCP Server | `mark3labs/mcp-go` | Streamable HTTP server for AI agent integration |
 | Auto-Update | `go-rocket-update` | Self-updating binary distribution |
 
 ### Frontend (React + TypeScript)

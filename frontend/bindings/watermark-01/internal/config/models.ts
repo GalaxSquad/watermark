@@ -16,6 +16,16 @@ export class AppSettings {
     "launchOnStartup": boolean;
     "minimizeToTray": boolean;
 
+    /**
+     * MCP server toggle (default: false — opt-in)
+     */
+    "mcpEnabled": boolean;
+
+    /**
+     * MCP server port (default: 34120)
+     */
+    "mcpPort": number;
+
     /** Creates a new AppSettings instance. */
     constructor($$source: Partial<AppSettings> = {}) {
         if (!("theme" in $$source)) {
@@ -35,6 +45,12 @@ export class AppSettings {
         }
         if (!("minimizeToTray" in $$source)) {
             this["minimizeToTray"] = false;
+        }
+        if (!("mcpEnabled" in $$source)) {
+            this["mcpEnabled"] = false;
+        }
+        if (!("mcpPort" in $$source)) {
+            this["mcpPort"] = 0;
         }
 
         Object.assign(this, $$source);

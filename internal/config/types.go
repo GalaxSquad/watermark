@@ -25,6 +25,8 @@ type AppSettings struct {
 	CodeFontSize    int    `json:"codeFontSize"`
 	LaunchOnStartup bool   `json:"launchOnStartup"`
 	MinimizeToTray  bool   `json:"minimizeToTray"`
+	MCPEnabled      bool   `json:"mcpEnabled"` // MCP server toggle (default: false — opt-in)
+	MCPPort         int    `json:"mcpPort"`    // MCP server port (default: 34120)
 }
 
 // AppConfig is the root config structure persisted to disk at ~/.watermark/config.json

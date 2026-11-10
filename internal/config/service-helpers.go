@@ -96,6 +96,8 @@ func (s *ConfigService) defaultConfig() AppConfig {
 			CodeFontSize:    14,
 			LaunchOnStartup: false,
 			MinimizeToTray:  false,
+			MCPEnabled:      false,
+			MCPPort:         34120,
 		},
 		ActiveClusterID: "",
 	}
