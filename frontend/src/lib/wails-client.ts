@@ -67,6 +67,8 @@ export {
   SetActiveCluster,
   ExportConfig,
   ImportConfig,
+  ExportConfigFile,
+  ImportConfigFile,
   ListAWSProfiles,
   GetSkippedVersion,
   SkipVersion,

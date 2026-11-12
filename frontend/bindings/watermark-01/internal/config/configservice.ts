@@ -34,9 +34,18 @@ export function DuplicateCluster(id: string): $CancellablePromise<$models.Cluste
 /**
  * ExportConfig exports the config as a JSON string.
  * If includePasswords is false, password fields are stripped.
+ * If includePasswords is true, passwords are decrypted to plaintext for portability across machines.
  */
 export function ExportConfig(includePasswords: boolean): $CancellablePromise<string> {
     return $Call.ByID(2346198263, includePasswords);
+}
+
+/**
+ * ExportConfigFile opens a native Save dialog and writes the configuration to a JSON file.
+ * Returns true if exported, false if cancelled by user.
+ */
+export function ExportConfigFile(includePasswords: boolean): $CancellablePromise<boolean> {
+    return $Call.ByID(2179429321, includePasswords);
 }
 
 /**
@@ -106,6 +115,14 @@ export function GetSkippedVersion(): $CancellablePromise<string> {
  */
 export function ImportConfig(jsonData: string): $CancellablePromise<void> {
     return $Call.ByID(819331168, jsonData);
+}
+
+/**
+ * ImportConfigFile opens a native Open dialog and imports configuration from a JSON file.
+ * Returns true if imported, false if cancelled by user.
+ */
+export function ImportConfigFile(): $CancellablePromise<boolean> {
+    return $Call.ByID(1245476694);
 }
 
 /**

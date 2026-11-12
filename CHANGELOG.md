@@ -3,6 +3,13 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.1] - 2026-11-12
+
+- Fix Import & Export configuration in Preferences with native OS file dialogs
+- Decrypt passwords to plaintext on export with user opt-in for cross-machine portability
+- Fix in-memory profile password corruption caused by shallow slice copying during export
+- Add loading spinners, error/success toasts, and instant cluster cache refresh upon import
+
 ## [1.3.0] - 2026-11-12
 
 - Embedded Model Context Protocol (MCP) server for AI agent integrations (Claude, Cursor) via Streamable HTTP transport

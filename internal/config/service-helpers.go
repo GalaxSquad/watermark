@@ -5,21 +5,41 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/google/uuid"
 )
 
 const configFileName = "config.json"
 
 // ExportConfig exports the config as a JSON string.
 // If includePasswords is false, password fields are stripped.
+// If includePasswords is true, passwords are decrypted to plaintext for portability across machines.
 func (s *ConfigService) ExportConfig(includePasswords bool) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	exportCfg := s.config
-	if !includePasswords {
-		for i := range exportCfg.Clusters {
+	exportCfg.Clusters = make([]ClusterProfile, len(s.config.Clusters))
+	copy(exportCfg.Clusters, s.config.Clusters)
+
+	for i := range exportCfg.Clusters {
+		if !includePasswords {
 			exportCfg.Clusters[i].Password = ""
 			exportCfg.Clusters[i].SchemaRegistryPassword = ""
+		} else {
+			// Decrypt passwords to plaintext so the exported JSON can be imported on other machines
+			if exportCfg.Clusters[i].Password != "" && IsEncrypted(exportCfg.Clusters[i].Password) {
+				decrypted, err := Decrypt(exportCfg.Clusters[i].Password, s.key)
+				if err == nil {
+					exportCfg.Clusters[i].Password = decrypted
+				}
+			}
+			if exportCfg.Clusters[i].SchemaRegistryPassword != "" && IsEncrypted(exportCfg.Clusters[i].SchemaRegistryPassword) {
+				decrypted, err := Decrypt(exportCfg.Clusters[i].SchemaRegistryPassword, s.key)
+				if err == nil {
+					exportCfg.Clusters[i].SchemaRegistryPassword = decrypted
+				}
+			}
 		}
 	}
 
@@ -41,11 +61,36 @@ func (s *ConfigService) ImportConfig(jsonData string) error {
 		return fmt.Errorf("import config: invalid JSON: %w", err)
 	}
 
-	// Encrypt any plaintext passwords in imported data
+	// Preserve local settings if imported settings are empty
+	if imported.Settings.Theme == "" {
+		imported.Settings = s.config.Settings
+	}
+	if imported.Settings.MCPPort <= 0 {
+		imported.Settings.MCPPort = 34120
+	}
+
+	// Validate clusters and encrypt passwords
 	for i := range imported.Clusters {
+		if imported.Clusters[i].ID == "" {
+			imported.Clusters[i].ID = uuid.New().String()
+		}
 		if err := s.encryptProfilePasswords(&imported.Clusters[i]); err != nil {
 			return fmt.Errorf("import config: encrypt: %w", err)
 		}
+	}
+
+	// Validate active cluster ID
+	hasActive := false
+	for _, c := range imported.Clusters {
+		if c.ID == imported.ActiveClusterID {
+			hasActive = true
+			break
+		}
+	}
+	if !hasActive && len(imported.Clusters) > 0 {
+		imported.ActiveClusterID = imported.Clusters[0].ID
+	} else if !hasActive {
+		imported.ActiveClusterID = ""
 	}
 
 	s.config = imported
