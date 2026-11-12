@@ -3,6 +3,16 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.0] - 2026-11-12
+
+- Embedded Model Context Protocol (MCP) server for AI agent integrations (Claude, Cursor) via Streamable HTTP transport
+- 10 read tools: query clusters, health, topics, configs, consumer groups, partition lag, messages, and schemas
+- 6 write tools: produce messages, create/delete topics, delete records before offset, purge topics, and reset consumer offsets
+- Cluster credential protection: automatically strip passwords, usernames, SASL, and AWS profiles from AI agent listings
+- Strict read-only mode protection blocking write tools on read-only clusters
+- App Preferences toggle with customizable port (default 34120) and live connection status indicator
+- macOS installation guide in README for bypassing Gatekeeper quarantine (`xattr -cr`)
+
 ## [1.2.1] - 2026-11-03
 
 - Clear consumer and topic lag across Dashboard, Consumers, Topics, and Lag Monitor/Ranking views
