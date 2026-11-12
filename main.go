@@ -7,6 +7,7 @@ import (
 	"watermark-01/internal/config"
 	"watermark-01/internal/kafka"
 	"watermark-01/internal/lagalert"
+	mcpsvc "watermark-01/internal/mcp"
 	"watermark-01/internal/schema"
 	"watermark-01/internal/templates"
 	"watermark-01/internal/updater"
@@ -54,7 +55,8 @@ func main() {
 		return
 	}
 
-	lifecycleApp := NewApp(configSvc, kafkaSvc, schemaSvc, annotationSvc, updaterSvc, lagAlertSvc, templateSvc)
+	mcpService := mcpsvc.NewMCPService(configSvc, kafkaSvc, schemaSvc)
+	lifecycleApp := NewApp(configSvc, kafkaSvc, schemaSvc, annotationSvc, updaterSvc, lagAlertSvc, templateSvc, mcpService)
 
 	app := application.New(application.Options{
 		Name:        "Watermark",

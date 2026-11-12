@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Icon } from "@/components/ui/icon";
-import { GetCurrentVersion, CheckForUpdate } from "@/lib/wails-client";
+import { GetCurrentVersion, CheckForUpdate, GetSettings, SaveSettings, IsMCPRunning, StartMCP, StopMCP } from "@/lib/wails-client";
 import { UpdateChangelogModal } from "@/components/layout/update-changelog-modal";
 import type { UpdateInfo } from "@/components/layout/update-changelog-modal";
 
@@ -112,6 +112,140 @@ function AppVersionSection() {
   );
 }
 
+function MCPSection() {
+  const [enabled, setEnabled] = useState(false);
+  const [port, setPort] = useState(34120);
+  const [portInput, setPortInput] = useState("34120");
+  const [running, setRunning] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  // Load persisted settings on mount
+  useEffect(() => {
+    GetSettings()
+      .then((s) => {
+        setEnabled(s.mcpEnabled ?? false);
+        const p = s.mcpPort || 34120;
+        setPort(p);
+        setPortInput(String(p));
+      })
+      .catch(() => {});
+    IsMCPRunning().then(setRunning).catch(() => {});
+  }, []);
+
+  const toggle = useCallback(
+    async (checked: boolean) => {
+      setError("");
+      setBusy(true);
+      try {
+        const settings = await GetSettings();
+        await SaveSettings({ ...settings, mcpEnabled: checked, mcpPort: port });
+        if (checked) {
+          await StartMCP();
+        } else {
+          await StopMCP();
+        }
+        setEnabled(checked);
+        setRunning(checked);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [port]
+  );
+
+  const applyPort = useCallback(
+    async (raw: string) => {
+      const parsed = parseInt(raw, 10);
+      if (isNaN(parsed) || parsed < 1024 || parsed > 65535) {
+        setPortInput(String(port)); // revert invalid input
+        return;
+      }
+      setPort(parsed);
+      setPortInput(String(parsed));
+      try {
+        const settings = await GetSettings();
+        await SaveSettings({ ...settings, mcpPort: parsed, mcpEnabled: enabled });
+        // Restart on new port if already running
+        if (running) {
+          setBusy(true);
+          try {
+            await StopMCP();
+            await StartMCP();
+          } finally {
+            setBusy(false);
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [enabled, port, running]
+  );
+
+  return (
+    <section>
+      <h3 className="flex items-center gap-2 text-sm font-display font-bold text-foreground uppercase tracking-wider mb-4">
+        <Icon name="globe" className="size-4" tone="brand" /> MCP Server
+      </h3>
+
+      <p className="text-xs text-muted-foreground mb-4">
+        Expose Kafka operations to AI agents (Claude, Cursor, etc.) via the Model Context Protocol.
+        Credentials never leave the app process.
+      </p>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label htmlFor="mcp-enabled" className="text-sm text-foreground font-normal cursor-pointer">
+              Enable MCP server
+            </Label>
+            <p className="text-xs mt-0.5">
+              {running ? (
+                <span className="flex items-center gap-1.5 text-green-400">
+                  <span className="inline-block size-1.5 rounded-full bg-green-400" />
+                  Running on localhost:{port}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Not running</span>
+              )}
+            </p>
+          </div>
+          <Switch
+            id="mcp-enabled"
+            checked={enabled}
+            disabled={busy}
+            onCheckedChange={toggle}
+          />
+        </div>
+
+        {enabled && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="mcp-port" className="text-sm text-foreground font-normal">
+              Port
+            </Label>
+            <input
+              id="mcp-port"
+              type="number"
+              min={1024}
+              max={65535}
+              value={portInput}
+              onChange={(e) => setPortInput(e.target.value)}
+              onBlur={(e) => applyPort(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applyPort(portInput)}
+              className="w-24 px-2 py-1 text-sm text-right bg-secondary border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        )}
+
+        {error && <p className="text-xs text-red-400">{error}</p>}
+      </div>
+    </section>
+  );
+}
+
 export function DataSystemForm() {
   return (
     <div className="space-y-8">
@@ -137,6 +271,9 @@ export function DataSystemForm() {
           </div>
         </div>
       </section>
+
+      {/* MCP Server */}
+      <MCPSection />
 
       {/* Import/Export */}
       <section>

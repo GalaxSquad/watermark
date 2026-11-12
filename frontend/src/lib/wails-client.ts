@@ -78,6 +78,9 @@ export const GetCluster = (id: string): Promise<ClusterProfile> =>
 export const DuplicateCluster = (id: string): Promise<ClusterProfile> =>
   _DuplicateCluster(id) as Promise<ClusterProfile>;
 
+// --- App (MCP) ---
+export { IsMCPRunning, StartMCP, StopMCP } from "../../bindings/watermark-01/app";
+
 export const TestConnection = (
   profile: ClusterProfile,
   clusterID: string,
