@@ -1,8 +1,20 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Icon } from "@/components/ui/icon";
-import { GetCurrentVersion, CheckForUpdate, GetSettings, SaveSettings, IsMCPRunning, StartMCP, StopMCP } from "@/lib/wails-client";
+import {
+  GetCurrentVersion,
+  CheckForUpdate,
+  GetSettings,
+  SaveSettings,
+  IsMCPRunning,
+  StartMCP,
+  StopMCP,
+  ExportConfigFile,
+  ImportConfigFile,
+} from "@/lib/wails-client";
 import { UpdateChangelogModal } from "@/components/layout/update-changelog-modal";
 import type { UpdateInfo } from "@/components/layout/update-changelog-modal";
 
@@ -246,6 +258,98 @@ function MCPSection() {
   );
 }
 
+function ImportExportSection() {
+  const queryClient = useQueryClient();
+  const [includePasswords, setIncludePasswords] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const exported = await ExportConfigFile(includePasswords);
+      if (exported) {
+        toast.success("Configuration exported successfully");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImport = async () => {
+    setIsImporting(true);
+    try {
+      const imported = await ImportConfigFile();
+      if (imported) {
+        await queryClient.invalidateQueries({ queryKey: ["clusters"] });
+        await queryClient.invalidateQueries({ queryKey: ["settings"] });
+        toast.success("Configuration imported successfully");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  return (
+    <section>
+      <h3 className="flex items-center gap-2 text-sm font-display font-bold text-foreground uppercase tracking-wider mb-4">
+        <Icon name="file-json" className="size-4" tone="brand" /> Configuration Backup
+      </h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Share cluster configurations with your team.
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={handleImport}
+          disabled={isImporting || isExporting}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors disabled:opacity-50"
+        >
+          {isImporting ? (
+            <Icon name="loader" className="size-4 animate-spin" />
+          ) : (
+            <Icon name="upload" className="size-4" />
+          )}
+          Import Config (.json)
+        </button>
+        <button
+          onClick={handleExport}
+          disabled={isImporting || isExporting}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors disabled:opacity-50"
+        >
+          {isExporting ? (
+            <Icon name="loader" className="size-4 animate-spin" />
+          ) : (
+            <Icon name="download" className="size-4" />
+          )}
+          Export Config (.json)
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 mt-3">
+        <Switch
+          id="include-passwords"
+          checked={includePasswords}
+          onCheckedChange={setIncludePasswords}
+        />
+        <Label
+          htmlFor="include-passwords"
+          className="text-xs text-semantic-red font-normal cursor-pointer"
+        >
+          Include passwords in export —{" "}
+          <strong className="inline-flex items-center gap-1">
+            <Icon name="alert-triangle" className="size-3" tone="warning" /> stored
+            as plaintext, keep file secure
+          </strong>
+        </Label>
+      </div>
+    </section>
+  );
+}
+
 export function DataSystemForm() {
   return (
     <div className="space-y-8">
@@ -276,28 +380,7 @@ export function DataSystemForm() {
       <MCPSection />
 
       {/* Import/Export */}
-      <section>
-        <p className="text-sm text-muted-foreground mb-4">
-          Share cluster configurations with your team.
-        </p>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-sm text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors">
-            <Icon name="download" className="size-4" />
-            Import Config (.json)
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors">
-            <Icon name="upload" className="size-4" />
-            Export Config (.json)
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 mt-3">
-          <Switch id="include-passwords" />
-          <Label htmlFor="include-passwords" className="text-xs text-semantic-red font-normal cursor-pointer">
-            Include passwords in export — <strong className="inline-flex items-center gap-1"><Icon name="alert-triangle" className="size-3" tone="warning" /> stored as plaintext, keep file secure</strong>
-          </Label>
-        </div>
-      </section>
+      <ImportExportSection />
 
       {/* About / version */}
       <AppVersionSection />

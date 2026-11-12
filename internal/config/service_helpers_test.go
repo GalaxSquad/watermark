@@ -23,9 +23,15 @@ func TestExportConfigWithPasswords(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Should contain encrypted password
-	if !strings.Contains(exported, "enc:v1:aes256gcm:") {
-		t.Fatal("expected encrypted password in export")
+	// Should contain decrypted plaintext password for cross-machine portability
+	if !strings.Contains(exported, `"password": "secret"`) {
+		t.Fatalf("expected plaintext password in export, got: %s", exported)
+	}
+
+	// In-memory config must remain encrypted
+	clusters := svc.GetClusters()
+	if !IsEncrypted(clusters[0].Password) {
+		t.Fatal("expected in-memory password to remain encrypted after export")
 	}
 }
 
@@ -45,8 +51,8 @@ func TestExportConfigWithoutPasswords(t *testing.T) {
 	}
 
 	// Should NOT contain any password data
-	if strings.Contains(exported, "enc:v1:") {
-		t.Fatal("expected no encrypted password in export without passwords")
+	if strings.Contains(exported, "secret") || strings.Contains(exported, "enc:v1:") {
+		t.Fatal("expected no password data in export without passwords")
 	}
 
 	// Parse and verify password field is empty
@@ -54,6 +60,42 @@ func TestExportConfigWithoutPasswords(t *testing.T) {
 	json.Unmarshal([]byte(exported), &cfg)
 	if cfg.Clusters[0].Password != "" {
 		t.Fatal("expected empty password in stripped export")
+	}
+
+	// In-memory config must NOT have its password stripped
+	clusters := svc.GetClusters()
+	if !IsEncrypted(clusters[0].Password) {
+		t.Fatal("expected in-memory password to remain encrypted after stripped export")
+	}
+}
+
+func TestExportImportCrossMachine(t *testing.T) {
+	svc1 := newTestService(t)
+	svc2 := newTestService(t) // different dir, different key
+
+	svc1.SaveCluster(ClusterProfile{
+		ID:               "cluster-1",
+		Name:             "Source Cluster",
+		BootstrapServers: "kafka:9092",
+		SecurityProtocol: "SASL_PLAIN",
+		Password:         "my-super-secret",
+	})
+
+	exported, err := svc1.ExportConfig(true)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if err := svc2.ImportConfig(exported); err != nil {
+		t.Fatalf("import failed: %v", err)
+	}
+
+	decrypted, err := svc2.GetDecryptedPassword("cluster-1")
+	if err != nil {
+		t.Fatalf("failed to decrypt password on target machine: %v", err)
+	}
+	if decrypted != "my-super-secret" {
+		t.Fatalf("expected 'my-super-secret', got '%s'", decrypted)
 	}
 }
 
