@@ -1,0 +1,116 @@
+@font-face {
+  font-family: "Phosphor";
+  src: url("./Phosphor.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.ph {
+  font-family: "Phosphor" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  letter-spacing: 0;
+  font-feature-settings: "liga";
+  -webkit-font-variant-ligatures: discretionary-ligatures;
+  font-variant-ligatures: discretionary-ligatures;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.ph.ph-arrows-clockwise:before {
+  content: "\e094";
+}
+.ph.ph-bell:before {
+  content: "\e0ce";
+}
+.ph.ph-chart-bar:before {
+  content: "\e150";
+}
+.ph.ph-chart-line:before {
+  content: "\e154";
+}
+.ph.ph-chart-line-up:before {
+  content: "\e156";
+}
+.ph.ph-check-circle:before {
+  content: "\e184";
+}
+.ph.ph-clock-counter-clockwise:before {
+  content: "\e1a0";
+}
+.ph.ph-copy:before {
+  content: "\e1ca";
+}
+.ph.ph-database:before {
+  content: "\e1de";
+}
+.ph.ph-desktop:before {
+  content: "\e560";
+}
+.ph.ph-download-simple:before {
+  content: "\e20c";
+}
+.ph.ph-file:before {
+  content: "\e230";
+}
+.ph.ph-folder:before {
+  content: "\e24a";
+}
+.ph.ph-gear:before {
+  content: "\e270";
+}
+.ph.ph-github-logo:before {
+  content: "\e576";
+}
+.ph.ph-globe:before {
+  content: "\e288";
+}
+.ph.ph-hard-drives:before {
+  content: "\e2a0";
+}
+.ph.ph-list-dashes:before {
+  content: "\e2f4";
+}
+.ph.ph-magnifying-glass:before {
+  content: "\e30c";
+}
+.ph.ph-paint-brush:before {
+  content: "\e6f0";
+}
+.ph.ph-pencil-simple:before {
+  content: "\e3b4";
+}
+.ph.ph-plugs-connected:before {
+  content: "\eb5a";
+}
+.ph.ph-plus:before {
+  content: "\e3d4";
+}
+.ph.ph-power:before {
+  content: "\e3da";
+}
+.ph.ph-shield-check:before {
+  content: "\e40c";
+}
+.ph.ph-tag:before {
+  content: "\e478";
+}
+.ph.ph-trash:before {
+  content: "\e4a6";
+}
+.ph.ph-tree-structure:before {
+  content: "\e67c";
+}
+.ph.ph-users:before {
+  content: "\e4d6";
+}
+.ph.ph-x:before {
+  content: "\e4f6";
+}
+.ph.ph-list:before {
+  content: "\e2f0";
+}

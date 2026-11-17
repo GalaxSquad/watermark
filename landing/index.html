@@ -3,18 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watermark | The Modern Kafka GUI</title>
-    
+    <title>Watermark | The Modern Kafka GUI for macOS</title>
+    <meta name="description" content="Watermark is a native macOS desktop client for Apache Kafka: real-time consumer lag alerts, lag ranking, topic annotations and multi-cluster management.">
+    <meta name="theme-color" content="#050505">
+
+    <!-- Share metadata -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Watermark">
+    <meta property="og:title" content="Watermark | The Modern Kafka GUI for macOS">
+    <meta property="og:description" content="A native macOS desktop client for Apache Kafka with real-time lag alerts, lag ranking, topic annotations and multi-cluster management.">
+    <meta property="og:url" content="https://watermark.kezlo.dev/">
+    <meta property="og:image" content="https://watermark.kezlo.dev/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The Watermark hero: The Kafka GUI built for Deep Observability, above the cluster overview dashboard.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Watermark | The Modern Kafka GUI for macOS">
+    <meta name="twitter:description" content="A native macOS desktop client for Apache Kafka with real-time lag alerts, lag ranking, topic annotations and multi-cluster management.">
+    <meta name="twitter:image" content="https://watermark.kezlo.dev/assets/og.png">
+
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Phosphor icons, self-hosted and applied without blocking the first paint. -->
+    <link rel="stylesheet" href="assets/phosphor/style.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="assets/phosphor/style.css"></noscript>
+
+    <!-- The `js` class only marks that scripting exists; script.js adds
+         `reveal-on` itself before anything may be hidden. -->
+    <script>document.documentElement.classList.add('js');</script>
+    <script src="script.js" defer></script>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -29,24 +54,27 @@
     <header class="navbar">
         <div class="container navbar-inner">
             <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M12 2.5C12 2.5 5.5 9.5 5.5 15C5.5 18.5899 8.41015 21.5 12 21.5C15.5899 21.5 18.5 18.5899 18.5 15C18.5 9.5 12 2.5 12 2.5Z" stroke="var(--color-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M12 11.5C10.067 11.5 8.5 13.067 8.5 15" stroke="var(--color-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <span class="logo-text">Watermark</span>
             </div>
-            <nav class="nav-links">
+            <nav class="nav-links" id="nav-menu" aria-label="Primary">
                 <a href="#why">Why Watermark?</a>
                 <a href="#features">Features</a>
                 <a href="#quickstart">Quick Start</a>
             </nav>
             <div class="nav-actions">
-                <a href="https://github.com/Kezlo98/watermark" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="GitHub Repository">
-                    <i class="ph ph-github-logo"></i>
+                <a href="https://github.com/Kezlo98/watermark" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="Watermark on GitHub">
+                    <i aria-hidden="true" class="ph ph-github-logo"></i>
                 </a>
-                <a href="https://github.com/Kezlo98/watermark/releases" class="btn btn-primary btn-glow">
-                    Download
+                <a href="https://github.com/Kezlo98/watermark/releases/latest/download/Watermark-darwin-universal.dmg" class="btn btn-primary btn-glow">
+                    Download for macOS
                 </a>
+                <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">
+                    <i aria-hidden="true" class="ph ph-list"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -54,24 +82,20 @@
     <!-- 2. Hero Section -->
     <main id="main-content">
     <section class="hero reveal">
-        <div class="container hero-inner">
+        <div class="container">
             <h1 class="hero-title">
-                The Kafka GUI built for <br />
-                <span class="text-gradient">Deep Observability.</span>
+                The Kafka GUI built for <span class="text-gradient">Deep Observability.</span>
             </h1>
             <p class="hero-subtitle">
                 Manage, monitor, and troubleshoot your Kafka clusters locally. Built for developers who need real-time lag alerts, topic annotations, and multi-cluster scale.
             </p>
             <div class="hero-actions">
                 <a href="https://github.com/Kezlo98/watermark/releases/latest/download/Watermark-darwin-universal.dmg" class="btn btn-primary btn-large btn-glow">
-                    <i class="ph ph-download-simple"></i>
-                    <div class="btn-stack">
-                        <span>Download App</span>
-                        <span class="btn-subtitle">(macOS only)</span>
-                    </div>
+                    <i aria-hidden="true" class="ph ph-download-simple"></i>
+                    Download for macOS
                 </a>
                 <a href="https://github.com/Kezlo98/watermark" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-large">
-                    <i class="ph ph-github-logo"></i> View in GitHub
+                    <i aria-hidden="true" class="ph ph-github-logo"></i> View in GitHub
                 </a>
             </div>
         </div>
@@ -84,11 +108,11 @@
                     <div class="dot dot-yellow"></div>
                     <div class="dot dot-green"></div>
                 </div>
-                <div class="mockup-dashboard" aria-label="Watermark Cluster Overview">
+                <div class="mockup-dashboard" role="img" aria-label="Watermark cluster overview: two brokers online, 768 topics, 6.1 GB total, with a broker table listing host, port and size.">
                     <!-- Top-left: Logo -->
                     <div class="mockup-logo-cell">
                         <div class="mockup-topbar-logo">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5C12 2.5 5.5 9.5 5.5 15C5.5 18.5899 8.41015 21.5 12 21.5C15.5899 21.5 18.5 18.5899 18.5 15C18.5 9.5 12 2.5 12 2.5Z" stroke="var(--color-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5C12 2.5 5.5 9.5 5.5 15C5.5 18.5899 8.41015 21.5 12 21.5C15.5899 21.5 18.5 18.5899 18.5 15C18.5 9.5 12 2.5 12 2.5Z" stroke="var(--color-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             <span>Watermark</span>
                         </div>
                     </div>
@@ -97,51 +121,51 @@
                         <div class="mockup-topbar-cluster">
                             <span class="mockup-cluster-dot green"></span>
                             <span>Dev Cluster</span>
-                            <span style="font-size:8px;margin-left:2px">▾</span>
+                            <span class="sort-caret" aria-hidden="true"></span>
                         </div>
                         <div class="mockup-topbar-search">
-                            <i class="ph ph-magnifying-glass"></i>
+                            <i aria-hidden="true" class="ph ph-magnifying-glass"></i>
                             <span>Search...</span>
                             <span class="mockup-kbd">⌘K</span>
                         </div>
                         <div class="mockup-topbar-right">
-                            <i class="ph ph-gear"></i>
+                            <i aria-hidden="true" class="ph ph-gear"></i>
                         </div>
                     </div>
                     <!-- Bottom-left: Sidebar Menu -->
                     <div class="mockup-sidebar">
-                        <nav class="mockup-sidebar-nav">
+                        <div class="mockup-sidebar-nav">
                             <div class="mockup-sidebar-label">MENU</div>
-                            <a class="mockup-nav-item active"><i class="ph ph-chart-bar"></i> Overview <span class="mockup-nav-dot"></span></a>
-                            <a class="mockup-nav-item"><i class="ph ph-list-dashes"></i> Topics <span class="mockup-nav-dot"></span></a>
-                            <a class="mockup-nav-item"><i class="ph ph-users"></i> Consumers</a>
-                            <a class="mockup-nav-item"><i class="ph ph-chart-line-up"></i> Monitoring</a>
-                            <a class="mockup-nav-item"><i class="ph ph-tree-structure"></i> Schemas</a>
-                        </nav>
+                            <a class="mockup-nav-item active"><i aria-hidden="true" class="ph ph-chart-bar"></i> Overview <span class="mockup-nav-dot"></span></a>
+                            <a class="mockup-nav-item"><i aria-hidden="true" class="ph ph-list-dashes"></i> Topics <span class="mockup-nav-dot"></span></a>
+                            <a class="mockup-nav-item"><i aria-hidden="true" class="ph ph-users"></i> Consumers</a>
+                            <a class="mockup-nav-item"><i aria-hidden="true" class="ph ph-chart-line-up"></i> Monitoring</a>
+                            <a class="mockup-nav-item"><i aria-hidden="true" class="ph ph-tree-structure"></i> Schemas</a>
+                        </div>
                     </div>
                     <!-- Bottom-right: Main Content -->
                     <div class="mockup-main">
                         <div class="mockup-page-header">
-                            <h4 class="mockup-page-title">CLUSTER OVERVIEW</h4>
-                            <i class="ph ph-arrows-clockwise" style="color:var(--color-text-muted);font-size:14px"></i>
+                            <span class="mockup-page-title">CLUSTER OVERVIEW</span>
+                            <i aria-hidden="true" class="ph ph-arrows-clockwise" style="color:var(--color-text-muted);font-size:var(--mockup-text-lg)"></i>
                         </div>
                         <!-- Stat Cards -->
                         <div class="mockup-stat-row">
                             <div class="mockup-stat-card">
-                                <div class="mockup-stat-label">CLUSTER STATUS <i class="ph ph-check-circle" style="color:var(--color-green)"></i></div>
+                                <div class="mockup-stat-label">CLUSTER STATUS <i aria-hidden="true" class="ph ph-check-circle" style="color:var(--color-green)"></i></div>
                                 <div class="mockup-stat-value">2/2 Online</div>
                                 <div class="mockup-stat-sub green">↑ All Healthy</div>
                             </div>
                             <div class="mockup-stat-card">
-                                <div class="mockup-stat-label">BROKERS <i class="ph ph-hard-drives" style="color:var(--color-blue)"></i></div>
+                                <div class="mockup-stat-label">BROKERS <i aria-hidden="true" class="ph ph-hard-drives" style="color:var(--color-blue)"></i></div>
                                 <div class="mockup-stat-value">2</div>
                             </div>
                             <div class="mockup-stat-card">
-                                <div class="mockup-stat-label">TOPICS <i class="ph ph-list-dashes" style="color:var(--color-green)"></i></div>
+                                <div class="mockup-stat-label">TOPICS <i aria-hidden="true" class="ph ph-list-dashes" style="color:var(--color-green)"></i></div>
                                 <div class="mockup-stat-value">768</div>
                             </div>
                             <div class="mockup-stat-card">
-                                <div class="mockup-stat-label">TOTAL SIZE <i class="ph ph-database" style="color:#f59e0b"></i></div>
+                                <div class="mockup-stat-label">TOTAL SIZE <i aria-hidden="true" class="ph ph-database" style="color:var(--color-warning)"></i></div>
                                 <div class="mockup-stat-value">6.1 GB</div>
                             </div>
                         </div>
@@ -150,7 +174,14 @@
                         <div class="mockup-table-block">
                             <table class="mockup-table">
                                 <thead>
-                                    <tr><th>ID ↕</th><th>STATUS ↕</th><th>HOST / IP ↕</th><th>PORT ↕</th><th>PARTITIONS ↕</th><th>SIZE ↕</th></tr>
+                                    <tr>
+                                        <th>ID<span class="sort-caret" aria-hidden="true"></span></th>
+                                        <th>STATUS</th>
+                                        <th>HOST / IP</th>
+                                        <th>PORT</th>
+                                        <th class="col-optional">PARTITIONS</th>
+                                        <th class="num">SIZE</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
@@ -158,16 +189,16 @@
                                         <td><span class="badge stable">● Online</span></td>
                                         <td class="mono">Localhost</td>
                                         <td class="mono">9094</td>
-                                        <td class="mono">1,342</td>
-                                        <td class="mono">3 GB</td>
+                                        <td class="mono col-optional">1,342</td>
+                                        <td class="mono num">3 GB</td>
                                     </tr>
                                     <tr>
                                         <td class="mono">2</td>
                                         <td><span class="badge stable">● Online</span></td>
                                         <td class="mono">Localhost</td>
                                         <td class="mono">9094</td>
-                                        <td class="mono">1,367</td>
-                                        <td class="mono">3.1 GB</td>
+                                        <td class="mono col-optional">1,367</td>
+                                        <td class="mono num">3.1 GB</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -189,10 +220,10 @@
                     We built Watermark because we were tired of choosing between extremes. On one hand, legacy tools like <strong>Offset Explorer</strong> are showing their age with outdated UIs and clunky UX.
                 </p>
                 <p>
-                    On the other hand, modern web-based Kafka UIs look great, but miss the operational features needed for daily data engineering work—and they often timeout on clusters with too many brokers.
+                    On the other hand, modern web-based Kafka UIs look great, but miss the operational features needed for daily data engineering work, and they often time out on clusters with too many brokers.
                 </p>
                 <p class="highlight">
-                    So we built Watermark from the ground up as a native desktop app—fast by default, no browser, no Docker—and supercharged it with the exact features DevOps and Engineers need.
+                    So we built Watermark as a native desktop app: fast by default, no browser, no Docker. It adds the operational features DevOps and engineers actually need.
                 </p>
             </div>
         </div>
@@ -206,28 +237,28 @@
             <div class="feature-row reveal fade-up">
                 <div class="feature-text">
                     <div class="icon-box purple">
-                        <i class="ph ph-chart-line-up"></i>
+                        <i aria-hidden="true" class="ph ph-chart-line-up"></i>
                     </div>
                     <h3 class="feature-title">Advanced Observability & Lag Alerts</h3>
                     <p class="feature-desc">
                         Stop guessing if your consumers are keeping up. Watermark introduces built-in Lag count monitoring, dynamic Lag Ranking to instantly spot problematic consumers, and real-time lag message alerts.
                     </p>
                     <ul class="feature-list">
-                        <li><i class="ph ph-check-circle"></i> Real-time Lag Visualizations</li>
-                        <li><i class="ph ph-check-circle"></i> Global Lag Ranking Dashboard</li>
-                        <li><i class="ph ph-check-circle"></i> Configurable Alert Thresholds</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Real-time Lag Visualizations</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Global Lag Ranking Dashboard</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Configurable Alert Thresholds</li>
                     </ul>
                 </div>
                 <div class="feature-image">
-                    <div class="mockup-app" aria-label="Watermark Monitoring Dashboard Preview">
+                    <div class="mockup-app" role="img" aria-label="Watermark monitoring view: consumer and topic lag rankings beside a seven-day lag chart where one topic spikes.">
                         <!-- Monitoring Header -->
                         <div class="mockup-monitoring-header">
-                            <h4 class="mockup-page-title">MONITORING</h4>
+                            <span class="mockup-page-title">MONITORING</span>
                             <div class="mockup-header-actions">
                                 <span class="mockup-indicator green">11s</span>
                                 <span class="mockup-indicator green">3Bs</span>
-                                <i class="ph ph-bell"></i>
-                                <i class="ph ph-gear"></i>
+                                <i aria-hidden="true" class="ph ph-bell"></i>
+                                <i aria-hidden="true" class="ph ph-gear"></i>
                             </div>
                         </div>
 
@@ -236,47 +267,47 @@
                             <!-- Consumer Lag Ranking -->
                             <div class="mockup-table-block">
                                 <div class="mockup-table-header">
-                                    <span class="mockup-table-icon purple"><i class="ph ph-chart-line-up"></i></span>
+                                    <span class="mockup-table-icon purple"><i aria-hidden="true" class="ph ph-chart-line-up"></i></span>
                                     <span class="mockup-table-label">CONSUMER LAG RANKING</span>
                                 </div>
                                 <table class="mockup-table">
                                     <thead>
-                                        <tr><th>#</th><th>GROUP ID</th><th>STATE</th><th>TOTAL LAG</th></tr>
+                                        <tr><th>#</th><th>GROUP ID</th><th>STATE</th><th class="num">TOTAL LAG<span class="sort-caret" aria-hidden="true"></span></th></tr>
                                     </thead>
                                     <tbody>
                                         <tr><td>1</td><td class="mono">GROUP_001</td><td><span class="badge stable">Stable</span></td><td class="lag-val high">5,562</td></tr>
-                                        <tr><td>2</td><td class="mono">Group-002</td><td><span class="badge stable">Stable</span></td><td class="lag-val high">1,521</td></tr>
+                                        <tr><td>2</td><td class="mono">GROUP_002</td><td><span class="badge stable">Stable</span></td><td class="lag-val high">1,521</td></tr>
                                         <tr><td>3</td><td class="mono">GROUP_003</td><td><span class="badge empty">Empty</span></td><td class="lag-val">23</td></tr>
-                                        <tr><td>4</td><td class="mono">GROUP_003</td><td><span class="badge empty">Empty</span></td><td class="lag-val">23</td></tr>
+                                        <tr><td>4</td><td class="mono">GROUP_004</td><td><span class="badge empty">Empty</span></td><td class="lag-val">23</td></tr>
                                     </tbody>
                                 </table>
-                                <div class="mockup-table-footer">Showing top 5 of 662 groups</div>
+                                <div class="mockup-table-footer">Showing top 4 of 662 groups</div>
                             </div>
                             <!-- Topic Lag Ranking -->
                             <div class="mockup-table-block">
                                 <div class="mockup-table-header">
-                                    <span class="mockup-table-icon cyan"><i class="ph ph-chart-bar"></i></span>
+                                    <span class="mockup-table-icon cyan"><i aria-hidden="true" class="ph ph-chart-bar"></i></span>
                                     <span class="mockup-table-label">TOPIC LAG RANKING</span>
                                 </div>
                                 <table class="mockup-table">
                                     <thead>
-                                        <tr><th>#</th><th>TOPIC</th><th>TOTAL LAG</th><th>GROUPS</th></tr>
+                                        <tr><th>#</th><th>TOPIC</th><th class="num">TOTAL LAG</th><th class="num">GROUPS</th></tr>
                                     </thead>
                                     <tbody>
-                                        <tr><td>1</td><td class="mono">springCloudBus</td><td class="lag-val critical">8,871,763</td><td>535</td></tr>
-                                        <tr><td>2</td><td class="mono">TOPIC_001</td><td class="lag-val high">5,198</td><td>2</td></tr>
-                                        <tr><td>3</td><td class="mono">TOPIC_002</td><td class="lag-val high">1,521</td><td>1</td></tr>
-                                        <tr><td>4</td><td class="mono">TOPIC_003</td><td class="lag-val">364</td><td>2</td></tr>
+                                        <tr><td>1</td><td class="mono">springCloudBus</td><td class="lag-val critical">8,871,763</td><td class="num">535</td></tr>
+                                        <tr><td>2</td><td class="mono">TOPIC_001</td><td class="lag-val high">5,198</td><td class="num">2</td></tr>
+                                        <tr><td>3</td><td class="mono">TOPIC_002</td><td class="lag-val high">1,521</td><td class="num">1</td></tr>
+                                        <tr><td>4</td><td class="mono">TOPIC_003</td><td class="lag-val">364</td><td class="num">2</td></tr>
                                     </tbody>
                                 </table>
-                                <div class="mockup-table-footer">Showing top 5 of 501 topics</div>
+                                <div class="mockup-table-footer">Showing top 4 of 501 topics</div>
                             </div>
                         </div>
 
                         <!-- Lag Visualization -->
                         <div class="mockup-viz-section">
                             <div class="mockup-viz-header">
-                                <span class="mockup-table-icon blue"><i class="ph ph-chart-line"></i></span>
+                                <span class="mockup-table-icon blue"><i aria-hidden="true" class="ph ph-chart-line"></i></span>
                                 <span class="mockup-viz-title">LAG VISUALIZATION</span>
                             </div>
                             <div class="mockup-viz-controls">
@@ -293,9 +324,9 @@
                                     <span class="time-btn">30d</span>
                                 </div>
                                 <div class="mockup-chart-type">
-                                    <span class="chart-btn active"><i class="ph ph-chart-line"></i> Area</span>
-                                    <span class="chart-btn"><i class="ph ph-chart-line"></i> Line</span>
-                                    <span class="chart-btn"><i class="ph ph-chart-bar"></i> Bar</span>
+                                    <span class="chart-btn active"><i aria-hidden="true" class="ph ph-chart-line"></i> Area</span>
+                                    <span class="chart-btn"><i aria-hidden="true" class="ph ph-chart-line"></i> Line</span>
+                                    <span class="chart-btn"><i aria-hidden="true" class="ph ph-chart-bar"></i> Bar</span>
                                 </div>
                             </div>
                             <!-- Mock Chart -->
@@ -314,26 +345,25 @@
                                     <line x1="35" y1="112" x2="500" y2="112" class="grid-line"/>
                                     <line x1="35" y1="132" x2="500" y2="132" class="grid-line"/>
                                     <!-- Area fill for TOPIC_A -->
-                                    <path d="M35,130 L120,128 L200,130 L280,125 L340,128 L380,120 L400,118 L420,132 L440,130 L460,128 L480,127 L500,125 L500,132 L35,132 Z" fill="rgba(139,92,246,0.15)"/>
+                                    <path d="M35,130 L120,128 L200,130 L280,125 L340,128 L380,120 L400,118 L420,132 L440,130 L460,128 L480,127 L500,125 L500,132 L35,132 Z" fill="var(--tint-purple)"/>
                                     <!-- Line for TOPIC_A -->
-                                    <polyline points="35,130 120,128 200,130 280,125 340,128 380,120 400,118 420,132 440,130 460,128 480,127 500,125" fill="none" stroke="#8b5cf6" stroke-width="1.5"/>
+                                    <polyline points="35,130 120,128 200,130 280,125 340,128 380,120 400,118 420,132 440,130 460,128 480,127 500,125" fill="none" stroke="var(--color-purple)" stroke-width="1.5"/>
                                     <!-- Area fill for TOPIC_D — spike -->
-                                    <path d="M420,132 L440,130 L460,40 L470,10 L480,15 L490,20 L500,25 L500,132 L420,132 Z" fill="rgba(239,68,68,0.2)"/>
+                                    <path d="M420,132 L440,130 L460,40 L470,10 L480,15 L490,20 L500,25 L500,132 L420,132 Z" fill="var(--tint-red)"/>
                                     <!-- Line for TOPIC_D spike -->
-                                    <polyline points="420,132 440,130 460,40 470,10 480,15 490,20 500,25" fill="none" stroke="#ef4444" stroke-width="1.5"/>
-                                    <!-- X-axis labels -->
-                                    <text x="60" y="140" class="chart-label">Fri 27</text>
-                                    <text x="200" y="140" class="chart-label">Sat 28</text>
-                                    <text x="370" y="140" class="chart-label">Mon 30</text>
-                                    <text x="460" y="140" class="chart-label">Tue 31</text>
+                                    <polyline points="420,132 440,130 460,40 470,10 480,15 490,20 500,25" fill="none" stroke="var(--color-critical)" stroke-width="1.5"/>
                                 </svg>
+                            </div>
+                            <!-- X-axis: evenly spaced ticks for consecutive days -->
+                            <div class="mockup-axis">
+                                <span>Fri 27</span><span>Sat 28</span><span>Sun 29</span><span>Mon 30</span>
                             </div>
                             <!-- Legend -->
                             <div class="mockup-legend">
-                                <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span> TOPIC_A</span>
-                                <span class="legend-item"><span class="legend-dot" style="background:#06b6d4"></span> TOPIC_B</span>
-                                <span class="legend-item"><span class="legend-dot" style="background:#eab308"></span> TOPIC_C</span>
-                                <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> TOPIC_D</span>
+                                <span class="legend-item"><span class="legend-dot" style="background:var(--color-purple)"></span> TOPIC_A</span>
+                                <span class="legend-item"><span class="legend-dot" style="background:var(--color-cyan)"></span> TOPIC_B</span>
+                                <span class="legend-item"><span class="legend-dot" style="background:var(--color-yellow)"></span> TOPIC_C</span>
+                                <span class="legend-item"><span class="legend-dot" style="background:var(--color-critical)"></span> TOPIC_D</span>
                             </div>
                         </div>
                     </div>
@@ -344,36 +374,36 @@
             <div class="feature-row reversed reveal fade-up">
                 <div class="feature-text">
                     <div class="icon-box blue">
-                        <i class="ph ph-tag"></i>
+                        <i aria-hidden="true" class="ph ph-tag"></i>
                     </div>
                     <h3 class="feature-title">Context-Aware Topic Annotations</h3>
                     <p class="feature-desc">
                         Ever looked at a topic and wondered: <em>"Who produces to this? Who consumes it?"</em> With Topic Annotations, you can tag producers, consumers, and add crucial documentation directly to topics.
                     </p>
                     <ul class="feature-list">
-                        <li><i class="ph ph-check-circle"></i> Tag Producers & Consumers</li>
-                        <li><i class="ph ph-check-circle"></i> Add Custom Metadata/Docs</li>
-                        <li><i class="ph ph-check-circle"></i> Share Annotations across your team</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Tag Producers & Consumers</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Add Custom Metadata/Docs</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Share Annotations across your team</li>
                     </ul>
                 </div>
                 <div class="feature-image">
-                    <div class="mockup-app" aria-label="Topic Annotations Preview">
+                    <div class="mockup-app" role="img" aria-label="Watermark topics table with annotation chips linking each audit topic to its producer and consumer groups.">
                         <!-- Topics Header -->
                         <div class="mockup-monitoring-header">
-                            <h4 class="mockup-page-title">TOPICS</h4>
+                            <span class="mockup-page-title">TOPICS</span>
                             <div class="mockup-header-actions">
-                                <span class="mockup-btn-create"><i class="ph ph-plus"></i> Create Topic</span>
+                                <span class="mockup-btn-create"><i aria-hidden="true" class="ph ph-plus"></i> Create Topic</span>
                             </div>
                         </div>
                         <!-- Search -->
                         <div class="mockup-search-bar">
-                            <i class="ph ph-magnifying-glass"></i>
+                            <i aria-hidden="true" class="ph ph-magnifying-glass"></i>
                             <span class="mockup-search-text">AU</span>
                         </div>
                         <!-- Topics Table -->
                         <table class="mockup-table">
                             <thead>
-                                <tr><th>NAME ↕</th><th>PARTITIONS ↕</th><th>REPLICAS ↕</th><th>SIZE ↕</th><th>RETENTION ↕</th></tr>
+                                <tr><th>NAME<span class="sort-caret" aria-hidden="true"></span></th><th class="num">PARTITIONS</th><th class="num">REPLICAS</th><th class="num">SIZE</th><th class="num col-optional">RETENTION</th></tr>
                             </thead>
                             <tbody>
                                 <tr>
@@ -388,7 +418,7 @@
                                     <td class="mono">1</td>
                                     <td class="mono">2</td>
                                     <td class="mono">1.1 MB</td>
-                                    <td class="mono">2d</td>
+                                    <td class="mono col-optional">2d</td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -402,7 +432,7 @@
                                     <td class="mono">1</td>
                                     <td class="mono">2</td>
                                     <td class="mono">2.2 MB</td>
-                                    <td class="mono">2d</td>
+                                    <td class="mono col-optional">2d</td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -416,7 +446,7 @@
                                     <td class="mono">5</td>
                                     <td class="mono">1</td>
                                     <td class="mono">113.1 KB</td>
-                                    <td class="mono">2d</td>
+                                    <td class="mono col-optional">2d</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -428,39 +458,39 @@
             <div class="feature-row reversed reveal fade-up">
                 <div class="feature-text">
                     <div class="icon-box green">
-                        <i class="ph ph-plugs-connected"></i>
+                        <i aria-hidden="true" class="ph ph-plugs-connected"></i>
                     </div>
                     <h3 class="feature-title">Built for Complex Environments</h3>
                     <p class="feature-desc">
-                        Manage dozens of clusters without the UI freezing. Seamlessly switch contexts, manage multiple authentications, and export your configurations.
+                        Manage dozens of clusters without the UI freezing. Switch contexts, manage multiple authentications, and export your configurations.
                     </p>
                     <ul class="feature-list">
-                        <li><i class="ph ph-check-circle"></i> Multi-Cluster Support (No Timeouts)</li>
-                        <li><i class="ph ph-check-circle"></i> Export & Import Cluster Configs</li>
-                        <li><i class="ph ph-check-circle"></i> Auth: SSL, AWS IAM, SASL</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Multi-Cluster Support (No Timeouts)</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Export & Import Cluster Configs</li>
+                        <li><i aria-hidden="true" class="ph ph-check-circle"></i> Auth: SSL, AWS IAM, SASL</li>
                     </ul>
                 </div>
                 <div class="feature-image">
-                    <div class="mockup-app" aria-label="Multiple Cluster Configuration Preview">
+                    <div class="mockup-app" role="img" aria-label="Watermark preferences window listing connected clusters, each with a read-only badge and connection actions.">
                         <!-- Preferences Header -->
                         <div class="mockup-monitoring-header">
-                            <h4 class="mockup-page-title"><i class="ph ph-gear" style="font-size:14px;margin-right:4px"></i> Preferences</h4>
-                            <i class="ph ph-x" style="color:var(--color-text-muted);font-size:14px;cursor:pointer"></i>
+                            <span class="mockup-page-title"><i aria-hidden="true" class="ph ph-gear" style="font-size:var(--mockup-text-lg);margin-right:4px"></i> Preferences</span>
+                            <i aria-hidden="true" class="ph ph-x" style="color:var(--color-text-muted);font-size:var(--mockup-text-lg);cursor:pointer"></i>
                         </div>
                         <div class="mockup-preferences">
                             <!-- Sidebar -->
                             <div class="mockup-pref-sidebar">
-                                <div class="mockup-pref-item active"><i class="ph ph-globe" style="color:var(--color-green)"></i> Clusters</div>
-                                <div class="mockup-pref-item"><i class="ph ph-paint-brush" style="color:#f59e0b"></i> Appearance</div>
-                                <div class="mockup-pref-item"><i class="ph ph-folder" style="color:#f59e0b"></i> Annotations</div>
-                                <div class="mockup-pref-item"><i class="ph ph-file" style="color:var(--color-text-muted)"></i> Templates</div>
-                                <div class="mockup-pref-item"><i class="ph ph-desktop" style="color:var(--color-text-muted)"></i> System</div>
+                                <div class="mockup-pref-item active"><i aria-hidden="true" class="ph ph-globe" style="color:var(--color-green)"></i> Clusters</div>
+                                <div class="mockup-pref-item"><i aria-hidden="true" class="ph ph-paint-brush" style="color:var(--color-warning)"></i> Appearance</div>
+                                <div class="mockup-pref-item"><i aria-hidden="true" class="ph ph-folder" style="color:var(--color-warning)"></i> Annotations</div>
+                                <div class="mockup-pref-item"><i aria-hidden="true" class="ph ph-file" style="color:var(--color-text-muted)"></i> Templates</div>
+                                <div class="mockup-pref-item"><i aria-hidden="true" class="ph ph-desktop" style="color:var(--color-text-muted)"></i> System</div>
                             </div>
                             <!-- Content -->
                             <div class="mockup-pref-content">
                                 <div class="mockup-pref-header">
-                                    <span><i class="ph ph-globe" style="color:var(--color-green);margin-right:4px"></i> CLUSTER CONNECTIONS</span>
-                                    <span class="mockup-btn-create small"><i class="ph ph-plus"></i> Add</span>
+                                    <span><i aria-hidden="true" class="ph ph-globe" style="color:var(--color-green);margin-right:4px"></i> CLUSTER CONNECTIONS</span>
+                                    <span class="mockup-btn-create small"><i aria-hidden="true" class="ph ph-plus"></i> Add</span>
                                 </div>
                                 <!-- Cluster Items -->
                                 <div class="mockup-cluster-item">
@@ -470,7 +500,7 @@
                                     </div>
                                     <div class="mockup-cluster-actions">
                                         <span class="badge stable">Connected</span>
-                                        <i class="ph ph-power"></i><i class="ph ph-pencil-simple"></i><i class="ph ph-copy"></i><i class="ph ph-trash"></i>
+                                        <i aria-hidden="true" class="ph ph-power"></i><i aria-hidden="true" class="ph ph-pencil-simple"></i><i aria-hidden="true" class="ph ph-copy"></i><i aria-hidden="true" class="ph ph-trash"></i>
                                     </div>
                                 </div>
                                 <div class="mockup-cluster-item">
@@ -480,7 +510,7 @@
                                     </div>
                                     <div class="mockup-cluster-actions">
                                         <span class="badge read-only">Read-Only</span>
-                                        <i class="ph ph-power"></i><i class="ph ph-pencil-simple"></i><i class="ph ph-copy"></i><i class="ph ph-trash"></i>
+                                        <i aria-hidden="true" class="ph ph-power"></i><i aria-hidden="true" class="ph ph-pencil-simple"></i><i aria-hidden="true" class="ph ph-copy"></i><i aria-hidden="true" class="ph ph-trash"></i>
                                     </div>
                                 </div>
                                 <div class="mockup-cluster-item">
@@ -489,7 +519,7 @@
                                         <span class="mockup-cluster-name green">AVB Non-Prod</span>
                                     </div>
                                     <div class="mockup-cluster-actions">
-                                        <i class="ph ph-power"></i><i class="ph ph-pencil-simple"></i><i class="ph ph-copy"></i><i class="ph ph-trash"></i>
+                                        <i aria-hidden="true" class="ph ph-power"></i><i aria-hidden="true" class="ph ph-pencil-simple"></i><i aria-hidden="true" class="ph ph-copy"></i><i aria-hidden="true" class="ph ph-trash"></i>
                                     </div>
                                 </div>
                                 <div class="mockup-cluster-item">
@@ -499,7 +529,7 @@
                                     </div>
                                     <div class="mockup-cluster-actions">
                                         <span class="badge read-only">Read-Only</span>
-                                        <i class="ph ph-power"></i><i class="ph ph-pencil-simple"></i><i class="ph ph-copy"></i><i class="ph ph-trash"></i>
+                                        <i aria-hidden="true" class="ph ph-power"></i><i aria-hidden="true" class="ph ph-pencil-simple"></i><i aria-hidden="true" class="ph ph-copy"></i><i aria-hidden="true" class="ph ph-trash"></i>
                                     </div>
                                 </div>
                             </div>
@@ -512,7 +542,7 @@
     </section>
 
     <!-- 5. Developer Productivity (Bento Box) -->
-    <section class="qol why reveal fade-up">
+    <section class="why reveal fade-up">
         <div class="container container-large">
             <div class="text-center section-header">
                 <h2 class="section-title">Quality of Life Improvements</h2>
@@ -522,29 +552,29 @@
             <div class="bento-grid">
                 <!-- Replay -->
                 <div class="bento-card">
-                    <i class="ph ph-clock-counter-clockwise icon-purple"></i>
-                    <h4>Replay Messages</h4>
+                    <i aria-hidden="true" class="ph ph-clock-counter-clockwise icon-purple"></i>
+                    <h3>Replay Messages</h3>
                     <p>Resend existing messages to test downstream consumers quickly.</p>
                 </div>
 
                 <!-- Templates -->
                 <div class="bento-card">
-                    <i class="ph ph-copy icon-blue"></i>
-                    <h4>Topic Templates</h4>
+                    <i aria-hidden="true" class="ph ph-copy icon-blue"></i>
+                    <h3>Topic Templates</h3>
                     <p>Clone topic settings or use predefined templates for lightning-fast creation.</p>
                 </div>
 
                 <!-- Read Only -->
                 <div class="bento-card">
-                    <i class="ph ph-shield-check icon-green"></i>
-                    <h4>Read-Only Clusters</h4>
+                    <i aria-hidden="true" class="ph ph-shield-check icon-green"></i>
+                    <h3>Read-Only Clusters</h3>
                     <p>Protect production by marking specific clusters as read-only.</p>
                 </div>
 
                 <!-- Local -->
                 <div class="bento-card">
-                    <i class="ph ph-hard-drives icon-neutral"></i>
-                    <h4>100% Local & Lite</h4>
+                    <i aria-hidden="true" class="ph ph-hard-drives icon-neutral"></i>
+                    <h3>100% Local &amp; Lite</h3>
                     <p>All settings and configs are stored safely on your local machine.</p>
                 </div>
             </div>
@@ -554,29 +584,48 @@
     <!-- 6. Quick Start & Social Proof -->
     <section id="quickstart" class="quickstart reveal fade-up">
         <div class="container container-small text-center">
-            <h2 class="section-title">Ready to upgrade your workflow?</h2>
-            
+            <div class="section-header">
+                <h2 class="section-title">Install Watermark on macOS</h2>
+                <p class="section-subtitle">Three steps and about a minute. The build is unsigned, so the last step clears the quarantine flag macOS adds to downloads.</p>
+            </div>
+
+            <ol class="quickstart-steps" role="list">
+                <li>
+                    <h3 class="step-title">Download the disk image</h3>
+                    <p>
+                        Get <a href="https://github.com/Kezlo98/watermark/releases/latest/download/Watermark-darwin-universal.dmg">Watermark-darwin-universal.dmg</a>,
+                        a universal build for Apple silicon and Intel Macs. Compare it with
+                        <a href="https://github.com/Kezlo98/watermark/releases/latest/download/checksums.txt">checksums.txt</a> if you want to verify the download.
+                    </p>
+                </li>
+                <li>
+                    <h3 class="step-title">Drag Watermark into Applications</h3>
+                    <p>Open the disk image, then drag <code>Watermark.app</code> onto your Applications folder.</p>
+                </li>
+                <li>
+                    <h3 class="step-title">Clear the quarantine flag</h3>
+                    <p>
+                        Run this once in Terminal. Without it macOS reports the app as damaged, because the build is not notarized.
+                        <code class="cmd">xattr -cr /Applications/Watermark.app</code>
+                    </p>
+                </li>
+            </ol>
 
             <!-- Actions -->
             <div class="quickstart-actions">
                 <a href="https://github.com/Kezlo98/watermark/releases/latest/download/Watermark-darwin-universal.dmg" class="btn btn-primary btn-large btn-glow">
-                    <i class="ph ph-download-simple"></i>
-                    <div class="btn-stack">
-                        <span>Download App</span>
-                        <span class="btn-subtitle">(macOS only)</span>
-                    </div>
+                    <i aria-hidden="true" class="ph ph-download-simple"></i>
+                    Download for macOS
                 </a>
                 <a href="https://github.com/Kezlo98/watermark" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-large">
-                    <i class="ph ph-github-logo"></i> View in GitHub
+                    <i aria-hidden="true" class="ph ph-github-logo"></i> View in GitHub
                 </a>
             </div>
 
             <div class="social-proof">
                 <a href="https://github.com/Kezlo98/watermark" class="social-link">
-                    <i class="ph ph-github-logo"></i> Star on GitHub
+                    <i aria-hidden="true" class="ph ph-github-logo"></i> Star on GitHub
                 </a>
-                <span class="dot-separator">•</span>
-                <span class="license">Open Source (Apache 2.0)</span>
             </div>
         </div>
     </section>
@@ -588,18 +637,16 @@
         <div class="container footer-inner">
             <div class="footer-brand">
                 <span class="logo-text">Watermark</span>
-                <span class="footer-desc">| Open Source Kafka GUI</span>
+                <span class="footer-desc">| Kafka GUI for macOS</span>
             </div>
             <div class="footer-links">
                 <a href="https://github.com/Kezlo98/watermark">GitHub Repository</a>
                 <a href="https://github.com/Kezlo98/watermark/issues">Report an Issue</a>
             </div>
             <div class="footer-copy">
-                Built from the ground up as a native desktop Kafka GUI.
+                A native desktop Kafka GUI for macOS.
             </div>
         </div>
     </footer>
-
-    <script src="script.js"></script>
 </body>
 </html>
