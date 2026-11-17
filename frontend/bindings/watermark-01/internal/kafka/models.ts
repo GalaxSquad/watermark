@@ -513,6 +513,139 @@ export class Partition {
 }
 
 /**
+ * ProduceBatchOptions describes a batch of Count identical message bodies sent
+ * to one topic/partition, with ${VARIABLE} expansion applied per message.
+ */
+export class ProduceBatchOptions {
+    "partition": number;
+    "key": string;
+    "value": string;
+    "headers"?: { [_ in string]?: string };
+    "count": number;
+
+    /**
+     * 0 = unthrottled
+     */
+    "targetTps": number;
+
+    /** Creates a new ProduceBatchOptions instance. */
+    constructor($$source: Partial<ProduceBatchOptions> = {}) {
+        if (!("partition" in $$source)) {
+            this["partition"] = 0;
+        }
+        if (!("key" in $$source)) {
+            this["key"] = "";
+        }
+        if (!("value" in $$source)) {
+            this["value"] = "";
+        }
+        if (!("count" in $$source)) {
+            this["count"] = 0;
+        }
+        if (!("targetTps" in $$source)) {
+            this["targetTps"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ProduceBatchOptions instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ProduceBatchOptions {
+        const $$createField3_0 = $$createType9;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("headers" in $$parsedSource) {
+            $$parsedSource["headers"] = $$createField3_0($$parsedSource["headers"]);
+        }
+        return new ProduceBatchOptions($$parsedSource as Partial<ProduceBatchOptions>);
+    }
+}
+
+/**
+ * ProduceBatchSummary is the authoritative result of a batch produce run.
+ */
+export class ProduceBatchSummary {
+    "total": number;
+    "sent": number;
+    "failed": number;
+    "cancelled": boolean;
+    "elapsedMs": number;
+    "actualTps": number;
+    "errors"?: ProduceErrorSample[];
+    "unknownVariables"?: string[];
+
+    /** Creates a new ProduceBatchSummary instance. */
+    constructor($$source: Partial<ProduceBatchSummary> = {}) {
+        if (!("total" in $$source)) {
+            this["total"] = 0;
+        }
+        if (!("sent" in $$source)) {
+            this["sent"] = 0;
+        }
+        if (!("failed" in $$source)) {
+            this["failed"] = 0;
+        }
+        if (!("cancelled" in $$source)) {
+            this["cancelled"] = false;
+        }
+        if (!("elapsedMs" in $$source)) {
+            this["elapsedMs"] = 0;
+        }
+        if (!("actualTps" in $$source)) {
+            this["actualTps"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ProduceBatchSummary instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ProduceBatchSummary {
+        const $$createField6_0 = $$createType11;
+        const $$createField7_0 = $$createType12;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("errors" in $$parsedSource) {
+            $$parsedSource["errors"] = $$createField6_0($$parsedSource["errors"]);
+        }
+        if ("unknownVariables" in $$parsedSource) {
+            $$parsedSource["unknownVariables"] = $$createField7_0($$parsedSource["unknownVariables"]);
+        }
+        return new ProduceBatchSummary($$parsedSource as Partial<ProduceBatchSummary>);
+    }
+}
+
+/**
+ * ProduceErrorSample identifies one failed message. Index is the 0-based message
+ * ordinal, matching ProduceResult.Index.
+ */
+export class ProduceErrorSample {
+    "index": number;
+    "error": string;
+
+    /** Creates a new ProduceErrorSample instance. */
+    constructor($$source: Partial<ProduceErrorSample> = {}) {
+        if (!("index" in $$source)) {
+            this["index"] = 0;
+        }
+        if (!("error" in $$source)) {
+            this["error"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ProduceErrorSample instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ProduceErrorSample {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ProduceErrorSample($$parsedSource as Partial<ProduceErrorSample>);
+    }
+}
+
+/**
  * ProduceMessageRequest represents a single message in a batch produce request.
  */
 export class ProduceMessageRequest {
@@ -709,3 +842,6 @@ const $$createType6 = $Create.Nullable($$createType5);
 const $$createType7 = Broker.createFrom;
 const $$createType8 = $Create.Array($$createType7);
 const $$createType9 = $Create.Map($Create.Any, $Create.Any);
+const $$createType10 = ProduceErrorSample.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = $Create.Array($Create.Any);
