@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import type { TopicConfig } from "@/types/kafka";
 import { useTemplates } from "@/hooks/use-templates";
 import {
@@ -264,14 +270,16 @@ export function SaveTemplateModal({
               <label className="text-sm font-medium text-foreground">
                 Overridden Configs
               </label>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="xs"
                 onClick={handleAddRow}
-                className="flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="gap-1"
               >
                 <Icon name="plus" className="size-3" />
                 Add Config
-              </button>
+              </Button>
             </div>
 
             {configRows.length === 0 ? (
@@ -314,14 +322,21 @@ export function SaveTemplateModal({
                       placeholder="604800000"
                       className="w-full rounded-md border border-border bg-card px-3 py-1.5 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRow(index)}
-                      className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
-                      title="Remove config"
-                    >
-                      <Icon name="trash" className="size-3.5" tone="danger" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => handleRemoveRow(index)}
+                          aria-label={`Remove config ${row.key || index + 1}`}
+                          className="text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
+                        >
+                          <Icon name="trash" className="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">Remove config</TooltipContent>
+                    </Tooltip>
                   </div>
                 ))}
               </div>
@@ -336,16 +351,13 @@ export function SaveTemplateModal({
         </DialogBody>
 
         <DialogFooter>
-          <button
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-card"
-          >
+          <Button variant="ghost" onClick={onClose}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSave}
             disabled={!name.trim() || isPending}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="gap-2"
           >
             <Icon name="bookmark" className="size-4" />
             {isPending
@@ -353,7 +365,7 @@ export function SaveTemplateModal({
               : isEditMode
                 ? "Update Template"
                 : "Save Template"}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

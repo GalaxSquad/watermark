@@ -44,10 +44,11 @@ const columns: ColumnDef<ConsumerGroup, unknown>[] = [
       />
     ),
   },
-  { accessorKey: "members", header: "Members" },
+  { accessorKey: "members", header: "Members", meta: { align: "right" } },
   {
     accessorKey: "totalLag",
     header: "Total Lag",
+    meta: { align: "right" },
     cell: ({ row }) => (
       <span className={cn("font-mono", row.original.totalLag > 0 && "text-semantic-red font-bold")}>
         {formatNumber(row.original.totalLag)}

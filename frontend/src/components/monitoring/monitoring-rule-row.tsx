@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { globMatch } from "@/lib/glob-match";
 import type { AlertRule } from "@/types/lag-alerts";
 
@@ -70,14 +76,21 @@ export function MonitoringRuleRow({
           title="Critical lag threshold"
           className="w-20 px-2 py-1 text-xs bg-secondary border border-border rounded text-semantic-red focus:outline-none focus:border-ring"
         />
-        <button
-          onClick={onDelete}
-          disabled={disabled}
-          className="p-1 text-muted-foreground hover:text-semantic-red transition-colors"
-          title="Delete rule"
-        >
-          <Icon name="x" className="size-3" tone="muted" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onDelete}
+              disabled={disabled}
+              aria-label="Delete rule"
+              className="text-muted-foreground hover:text-semantic-red hover:bg-semantic-red/10"
+            >
+              <Icon name="x" className="size-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">Delete rule</TooltipContent>
+        </Tooltip>
       </div>
       {error && <p className="text-xs text-semantic-red">{error}</p>}
       {local.groupPattern && (

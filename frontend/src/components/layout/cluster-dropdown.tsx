@@ -3,6 +3,7 @@ import { useSettingsStore } from "@/store/settings";
 import { useQuery } from "@tanstack/react-query";
 import { GetClusters } from "@/lib/wails-client";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,9 +93,11 @@ export function ClusterDropdown() {
   return (
     <DropdownMenu onOpenChange={(open) => { if (open) refreshPooledClusters(); }}>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors",
+            "gap-2 px-3 py-1.5 h-auto",
             connectionStatus === "connected"
               ? "bg-status-healthy/15 dark:bg-status-healthy/5 border-status-healthy/30 dark:border-status-healthy/20 hover:border-status-healthy/50 dark:hover:border-status-healthy/40"
               : connectionStatus === "error"
@@ -120,7 +123,7 @@ export function ClusterDropdown() {
             {statusLabel()}
           </span>
           <Icon name="chevron-down" tone="muted" className="size-3" />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-72" align="start" sideOffset={8}>
@@ -130,12 +133,14 @@ export function ClusterDropdown() {
         {clusters.length === 0 ? (
           <div className="py-6 text-center">
             <p className="text-xs text-muted-foreground mb-2">No clusters configured</p>
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={openSettings}
-              className="text-xs text-primary hover:underline"
+              className="h-auto p-0 text-xs"
             >
               Add a cluster →
-            </button>
+            </Button>
           </div>
         ) : (
           clusters.map((cluster) => {

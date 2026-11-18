@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/store/settings";
 
 const MonacoEditor = lazy(() => import("@monaco-editor/react"));
@@ -41,26 +42,32 @@ export function MessageInspector({ value, offset, format, onClose, onReplay }: M
         </span>
         <div className="flex gap-2">
           {onReplay && (
-            <button
+            <Button
+              variant="secondary"
+              size="xs"
               onClick={onReplay}
-              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded bg-secondary hover:bg-accent transition-colors flex items-center gap-1"
+              className="gap-1 text-xs"
             >
               <Icon name="rotate-ccw" className="size-3" tone="brand" />
               Replay
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="secondary"
+            size="xs"
             onClick={() => navigator.clipboard.writeText(value)}
-            className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded bg-secondary hover:bg-accent transition-colors"
+            className="text-xs"
           >
             Copy
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={onClose}
-            className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded bg-secondary hover:bg-accent transition-colors"
+            aria-label="Close inspector"
           >
             <Icon name="x" className="size-3" />
-          </button>
+          </Button>
         </div>
       </div>
       <div className="flex-1 min-h-[300px]">

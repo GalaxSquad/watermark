@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/data-table";
 import { cn, formatNumber } from "@/lib/utils";
 import type { Partition } from "@/types/kafka";
@@ -13,8 +14,8 @@ const isIsrMismatch = (p: Partition) => p.isr.length !== p.replicas.length;
 
 function buildColumns(onPurge?: (partition: Partition) => void): ColumnDef<Partition, unknown>[] {
   const base: ColumnDef<Partition, unknown>[] = [
-    { accessorKey: "id", header: "Partition" },
-    { accessorKey: "leader", header: "Leader Broker" },
+    { accessorKey: "id", header: "Partition", meta: { align: "right" } },
+    { accessorKey: "leader", header: "Leader Broker", meta: { align: "right" } },
     {
       accessorKey: "replicas",
       header: "Replicas",
@@ -32,11 +33,13 @@ function buildColumns(onPurge?: (partition: Partition) => void): ColumnDef<Parti
     {
       accessorKey: "lowWatermark",
       header: "Low Watermark",
+      meta: { align: "right" },
       cell: ({ row }) => formatNumber(row.original.lowWatermark),
     },
     {
       accessorKey: "highWatermark",
       header: "High Watermark",
+      meta: { align: "right" },
       cell: ({ row }) => formatNumber(row.original.highWatermark),
     },
   ];
@@ -49,20 +52,17 @@ function buildColumns(onPurge?: (partition: Partition) => void): ColumnDef<Parti
         const p = row.original;
         const isEmpty = p.lowWatermark === p.highWatermark;
         return (
-          <button
+          <Button
+            variant="destructive"
+            size="xs"
             onClick={(e) => { e.stopPropagation(); onPurge(p); }}
             disabled={isEmpty}
             title={isEmpty ? "Partition is already empty" : `Purge partition ${p.id}`}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors",
-              isEmpty
-                ? "text-muted-foreground border-border cursor-not-allowed"
-                : "text-red-400 border-red-500/20 bg-red-500/5 hover:bg-red-500/15",
-            )}
+            className="gap-1.5"
           >
-            <Icon name="trash" className="size-3" tone="danger" />
+            <Icon name="trash" className="size-3" />
             Purge
-          </button>
+          </Button>
         );
       },
     });

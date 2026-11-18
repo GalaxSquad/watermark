@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import type { RankingConfig } from "@/types/ranking-config";
 
 interface RankingConfigPanelProps {
@@ -73,12 +74,14 @@ export function RankingConfigPanel({ config, onUpdate }: RankingConfigPanelProps
             placeholder="e.g. TRANSACTION*"
             className="flex-1 px-2 py-1 text-xs bg-secondary border border-border rounded text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring font-mono"
           />
-          <button
+          <Button
+            variant="outline"
+            size="icon-xs"
             onClick={addExclude}
-            className="px-2 py-1 text-xs bg-secondary border border-border rounded text-muted-foreground hover:text-foreground hover:border-border-hover transition-colors"
+            aria-label="Add exclude pattern"
           >
             <Icon name="plus" className="size-3" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -103,12 +106,14 @@ export function RankingConfigPanel({ config, onUpdate }: RankingConfigPanelProps
             placeholder="e.g. TRANSACTION_01"
             className="flex-1 px-2 py-1 text-xs bg-secondary border border-border rounded text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring font-mono"
           />
-          <button
+          <Button
+            variant="outline"
+            size="icon-xs"
             onClick={addInclude}
-            className="px-2 py-1 text-xs bg-secondary border border-border rounded text-muted-foreground hover:text-foreground hover:border-border-hover transition-colors"
+            aria-label="Add include pattern"
           >
             <Icon name="plus" className="size-3" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -13,6 +13,8 @@ import {
 } from "@/lib/wails-client";
 import type { AlertRule, ClusterAlertConfig } from "@/types/lag-alerts";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TrackedEntitiesConfig } from "./tracked-entities-config";
 import { MonitoringToggle } from "./monitoring-toggle";
 import { MonitoringRuleRow } from "./monitoring-rule-row";
@@ -127,9 +129,12 @@ export function MonitoringConfigTab() {
 
   if (!connected) {
     return (
-      <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
-        Connect to a cluster to configure monitoring.
-      </div>
+      <EmptyState
+        compact
+        icon="activity"
+        title="No cluster connected"
+        description="Connect to a cluster to configure monitoring."
+      />
     );
   }
 
@@ -222,19 +227,37 @@ export function MonitoringConfigTab() {
           <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
             Alert Rules
           </span>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleAddRule}
             disabled={saving}
-            className="px-3 py-1 text-xs bg-primary/20 text-primary border border-primary/30 rounded hover:bg-primary/30 transition-colors disabled:opacity-50"
+            className="gap-1 text-xs bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
           >
-            + Add Rule
-          </button>
+            <Icon name="plus" className="size-3" />
+            Add Rule
+          </Button>
         </div>
 
         {cfg.rules.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-4 text-center border border-border rounded-lg">
-            No rules yet. Add a rule to start monitoring.
-          </p>
+          <EmptyState
+            compact
+            icon="bell"
+            title="No alert rules yet"
+            description="Add a rule to start monitoring — each rule watches a group pattern and fires when lag passes its warning or critical threshold."
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddRule}
+                disabled={saving}
+                className="gap-1 text-xs"
+              >
+                <Icon name="plus" className="size-3" />
+                Add your first rule
+              </Button>
+            }
+          />
         ) : (
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-3 text-[10px] text-muted-foreground uppercase tracking-wider">

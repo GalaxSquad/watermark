@@ -6,6 +6,7 @@ import type { UpdateInfo } from "@/components/layout/update-changelog-modal";
 import { cn } from "@/lib/utils";
 import { waitForWails } from "@/lib/wails-ready";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 
 /**
  * Sidebar update banner — shows when a new version is available.
@@ -79,25 +80,29 @@ export function UpdateBanner() {
           "relative rounded-xl border px-3.5 py-3 transition-[opacity,border-color,background-color] duration-200 ease-out",
           "bg-primary/10 border-primary/20"
         )}>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => setDismissed(true)}
-            className="absolute top-2 right-2 p-0.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="absolute top-2 right-2"
             aria-label="Dismiss update"
           >
             <Icon name="x" className="size-3" />
-          </button>
+          </Button>
           <div className="flex items-center gap-2 mb-1">
             <Icon name="arrow-down-circle" tone="brand" className="size-3.5" />
             <span className="text-[11px] font-semibold text-primary">
               {updateInfo!.latestVersion} Available
             </span>
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowModal(true)}
-            className="w-full mt-1.5 text-[11px] font-medium py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+            className="w-full mt-1.5 text-[11px] bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
           >
             Update Now
-          </button>
+          </Button>
         </div>
       </div>
 

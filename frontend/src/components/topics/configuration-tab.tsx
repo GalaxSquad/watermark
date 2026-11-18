@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/data-table";
 import { cn } from "@/lib/utils";
 import type { TopicConfig } from "@/types/kafka";
@@ -72,14 +73,15 @@ export function ConfigurationTab({ topicName }: ConfigurationTabProps) {
         <span className="text-xs font-mono text-muted-foreground">
           <span className="text-primary">{overriddenCount}</span> overridden
         </span>
-        <button
+        <Button
+          size="sm"
           onClick={() => setShowSaveModal(true)}
           disabled={overriddenCount === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary/90 hover:bg-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="gap-1.5 text-xs"
         >
           <Icon name="bookmark" className="size-3" />
           Save as Template
-        </button>
+        </Button>
       </div>
 
       {/* Config Table */}

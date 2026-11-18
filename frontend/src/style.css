@@ -125,6 +125,183 @@
     --icon-muted-primary: #64748B;
   }
 
+  /* Accent presets (DESIGN.md §2) — override ONLY the accent tokens.
+     :root[data-accent="…"] (specificity 0,2,0) beats .light (0,1,0), so
+     these win in both themes. Violet has no block: the :root tokens
+     already are violet, so the default look is unchanged.
+     Foreground: dark-mode accents are light, so text on them (primary
+     buttons, sidebar primary surfaces) needs near-black ink. The light
+     blocks below set it back to white, because the light shades are dark
+     enough for white text. Both fg tokens are set together so sidebar
+     primary surfaces always match buttons. */
+  :root[data-accent="stream"] {
+    --primary: #3AAFA9;
+    --ring: #3AAFA9;
+    --sidebar-primary: #3AAFA9;
+    --sidebar-ring: #3AAFA9;
+    --icon-brand-primary: #3AAFA9;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="phosphor"] {
+    --primary: #5BC98A;
+    --ring: #5BC98A;
+    --sidebar-primary: #5BC98A;
+    --sidebar-ring: #5BC98A;
+    --icon-brand-primary: #5BC98A;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="amber"] {
+    --primary: #E8A33D;
+    --ring: #E8A33D;
+    --sidebar-primary: #E8A33D;
+    --sidebar-ring: #E8A33D;
+    --icon-brand-primary: #E8A33D;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="ocean"] {
+    --primary: #4B8DFF;
+    --ring: #4B8DFF;
+    --sidebar-primary: #4B8DFF;
+    --sidebar-ring: #4B8DFF;
+    --icon-brand-primary: #4B8DFF;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="rose"] {
+    --primary: #F0568A;
+    --ring: #F0568A;
+    --sidebar-primary: #F0568A;
+    --sidebar-ring: #F0568A;
+    --icon-brand-primary: #F0568A;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="coral"] {
+    --primary: #F26D3D;
+    --ring: #F26D3D;
+    --sidebar-primary: #F26D3D;
+    --sidebar-ring: #F26D3D;
+    --icon-brand-primary: #F26D3D;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="indigo"] {
+    --primary: #7575F8;
+    --ring: #7575F8;
+    --sidebar-primary: #7575F8;
+    --sidebar-ring: #7575F8;
+    --icon-brand-primary: #7575F8;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="lime"] {
+    --primary: #A3E635;
+    --ring: #A3E635;
+    --sidebar-primary: #A3E635;
+    --sidebar-ring: #A3E635;
+    --icon-brand-primary: #A3E635;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+  :root[data-accent="graphite"] {
+    --primary: #D8DEE6;
+    --ring: #D8DEE6;
+    --sidebar-primary: #D8DEE6;
+    --sidebar-ring: #D8DEE6;
+    --icon-brand-primary: #D8DEE6;
+    --primary-foreground: #0A0A0A;
+    --sidebar-primary-foreground: #0A0A0A;
+  }
+
+  /* Light theme: darker accent shades so text-on-accent and accents on
+     white keep contrast, and white foreground back (the dark shades are
+     dark enough for white text). These tie (0,2,0) with the blocks above
+     and come later, so they win on .light. */
+  .light[data-accent="stream"] {
+    --primary: #0F766E;
+    --ring: #0F766E;
+    --sidebar-primary: #0F766E;
+    --sidebar-ring: #0F766E;
+    --icon-brand-primary: #0F766E;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="phosphor"] {
+    --primary: #15803D;
+    --ring: #15803D;
+    --sidebar-primary: #15803D;
+    --sidebar-ring: #15803D;
+    --icon-brand-primary: #15803D;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="amber"] {
+    --primary: #B45309;
+    --ring: #B45309;
+    --sidebar-primary: #B45309;
+    --sidebar-ring: #B45309;
+    --icon-brand-primary: #B45309;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="ocean"] {
+    --primary: #1D4ED8;
+    --ring: #1D4ED8;
+    --sidebar-primary: #1D4ED8;
+    --sidebar-ring: #1D4ED8;
+    --icon-brand-primary: #1D4ED8;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="rose"] {
+    --primary: #BE185D;
+    --ring: #BE185D;
+    --sidebar-primary: #BE185D;
+    --sidebar-ring: #BE185D;
+    --icon-brand-primary: #BE185D;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="coral"] {
+    --primary: #C2410C;
+    --ring: #C2410C;
+    --sidebar-primary: #C2410C;
+    --sidebar-ring: #C2410C;
+    --icon-brand-primary: #C2410C;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="indigo"] {
+    --primary: #4338CA;
+    --ring: #4338CA;
+    --sidebar-primary: #4338CA;
+    --sidebar-ring: #4338CA;
+    --icon-brand-primary: #4338CA;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="lime"] {
+    --primary: #4D7C0F;
+    --ring: #4D7C0F;
+    --sidebar-primary: #4D7C0F;
+    --sidebar-ring: #4D7C0F;
+    --icon-brand-primary: #4D7C0F;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+  .light[data-accent="graphite"] {
+    --primary: #475569;
+    --ring: #475569;
+    --sidebar-primary: #475569;
+    --sidebar-ring: #475569;
+    --icon-brand-primary: #475569;
+    --primary-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+
   * {
     margin: 0;
     padding: 0;
@@ -151,6 +328,19 @@
   #root {
     height: 100vh;
     overflow: hidden;
+  }
+
+  /* Film grain — very subtle printed-surface texture (DESIGN.md §5).
+     Fixed, pointer-transparent, above app content but below overlays
+     (dialogs, tooltips, dropdowns and toasts are z-50+). */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /* Custom scrollbar — dark mode only; light mode uses native OS scrollbars */

@@ -1,4 +1,10 @@
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { StartPosition, MessageFormat } from "@/types/kafka";
 import {
@@ -153,37 +159,48 @@ export function MessagesFilterBar({
       {/* Right: Actions & status */}
       <div className="flex items-center gap-2 flex-wrap">
         {/* Refresh */}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onRefresh}
           disabled={isFetching}
           className={cn(
-            "h-8 flex items-center gap-1.5 px-3 text-xs font-medium rounded-lg border transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98]",
-            "text-foreground bg-secondary/80 border-border hover:bg-accent",
-            isFetching && "opacity-60 cursor-wait text-primary bg-primary/10 border-primary/30",
+            "h-8 gap-1.5 px-3 text-xs",
+            isFetching && "opacity-60 cursor-wait text-primary bg-primary/10 border-primary/30"
           )}
         >
           <Icon name="refresh" tone={isFetching ? "brand" : "default"} className={cn("size-3.5", isFetching && "animate-spin")} />
           {isFetching ? "Fetching…" : "Refresh"}
-        </button>
+        </Button>
 
         {/* Sort direction toggle */}
-        <button
-          onClick={onSortDirToggle}
-          title="Sort by time (ASC/DESC)"
-          className="h-8 flex items-center gap-1.5 px-2.5 text-xs font-medium rounded-lg border transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98] text-muted-foreground hover:text-foreground bg-secondary/80 border-border hover:bg-accent"
-        >
-          {sortDir === "asc" ? <Icon name="arrow-up" className="size-3.5" /> : <Icon name="arrow-down" className="size-3.5" />}
-          {sortDir === "asc" ? "ASC" : "DESC"}
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSortDirToggle}
+              aria-label="Sort by time (ASC/DESC)"
+              className="h-8 gap-1.5 px-2.5 text-xs text-muted-foreground"
+            >
+              {sortDir === "asc" ? <Icon name="arrow-up" className="size-3.5" /> : <Icon name="arrow-down" className="size-3.5" />}
+              {sortDir === "asc" ? "ASC" : "DESC"}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">Sort by time (ASC/DESC)</TooltipContent>
+        </Tooltip>
 
         {/* Auto-refresh toggle */}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onAutoRefreshToggle}
+          aria-pressed={autoRefresh}
           className={cn(
-            "h-8 flex items-center gap-1.5 px-2.5 text-xs font-medium rounded-lg border transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98]",
+            "h-8 gap-1.5 px-2.5 text-xs",
             autoRefresh
-              ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
-              : "text-muted-foreground hover:text-foreground bg-secondary/80 border-border hover:bg-accent",
+              ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20"
+              : "text-muted-foreground"
           )}
         >
           {autoRefresh ? <Icon name="timer-off" className="size-3.5" tone="success" /> : <Icon name="timer" className="size-3.5" />}
@@ -195,30 +212,35 @@ export function MessagesFilterBar({
           ) : (
             "Auto (10s)"
           )}
-        </button>
+        </Button>
 
         {/* Select mode toggle */}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onSelectModeToggle}
+          aria-pressed={selectMode}
           className={cn(
-            "h-8 flex items-center gap-1.5 px-2.5 text-xs font-medium rounded-lg border transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98]",
+            "h-8 gap-1.5 px-2.5 text-xs",
             selectMode
-              ? "text-primary bg-primary/10 border-primary/30"
-              : "text-muted-foreground hover:text-foreground bg-secondary/80 border-border hover:bg-accent",
+              ? "text-primary bg-primary/10 border-primary/30 hover:bg-primary/20"
+              : "text-muted-foreground"
           )}
         >
           <Icon name="check-square" className="size-3.5" tone={selectMode ? "brand" : "muted"} />
           Select{selectedCount > 0 && ` (${selectedCount})`}
-        </button>
+        </Button>
 
         {/* Live Tail */}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onStartLiveTail}
-          className="h-8 flex items-center gap-1.5 px-3 text-xs font-medium rounded-lg border transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98] text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20"
+          className="h-8 gap-1.5 px-3 text-xs text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20"
         >
           <Icon name="radio" className="size-3.5" tone="success" />
           Live Tail
-        </button>
+        </Button>
 
         {/* Message count */}
         <span className="text-xs font-mono tabular-nums text-muted-foreground pl-1 whitespace-nowrap">

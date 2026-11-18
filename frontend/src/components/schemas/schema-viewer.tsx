@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { CompatibilityBadge } from "./compatibility-badge";
 import type { SchemaType, CompatibilityLevel } from "@/types/kafka";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
@@ -91,12 +92,14 @@ export function SchemaViewer({ subjectName }: SchemaViewerProps) {
           <span className="text-xs font-mono text-muted-foreground">
             {schemaType} | ID: {currentVersion.id}
           </span>
-          <button
+          <Button
+            variant="outline"
+            size="xs"
             onClick={copySchema}
-            className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground bg-secondary rounded border border-border hover:bg-accent transition-colors"
+            className="gap-1 text-xs"
           >
             <Icon name="copy" className="size-3" /> Copy
-          </button>
+          </Button>
         </div>
       </div>
 

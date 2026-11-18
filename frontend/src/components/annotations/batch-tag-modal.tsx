@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAnnotations } from "@/hooks/use-annotations";
+import { Button } from "@/components/ui/button";
 import { ServiceNameInput } from "./service-name-input";
 import { useAnnotationUIStore } from "@/store/annotations";
 import * as annotations from "../../../bindings/watermark-01/internal/annotations/models";
@@ -153,19 +154,12 @@ export function BatchTagModal({ topicNames, open, onClose }: BatchTagModalProps)
         </DialogBody>
 
         <DialogFooter>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-muted-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors"
-          >
+          <Button variant="outline" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={handleApply}
-            disabled={isSaving || !hasAnyTag}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
-          >
+          </Button>
+          <Button onClick={handleApply} disabled={isSaving || !hasAnyTag}>
             {isSaving ? "Applying..." : "Apply"}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

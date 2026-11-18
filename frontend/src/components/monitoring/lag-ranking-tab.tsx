@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
 import { useReadOnly } from "@/hooks/use-read-only";
 import { useRankingConfig } from "@/hooks/use-ranking-config";
@@ -59,6 +61,18 @@ export function LagRankingTab() {
       .sort((a, b) => b.totalLag - a.totalLag);
   }, [topicLags, config]);
 
+  // Outlier annotation: when the top topic's lag dwarfs the runner-up
+  // (≥10×), say so — a 300× gap with no comment is the chart staying
+  // silent exactly where it should speak.
+  const outlier = useMemo(() => {
+    if (filtered.length < 2) return null;
+    const [top, second] = filtered;
+    if (second.totalLag <= 0) return null;
+    const ratio = top.totalLag / second.totalLag;
+    if (ratio < 10) return null;
+    return { topic: top.topic, lag: top.totalLag, ratio: Math.round(ratio) };
+  }, [filtered]);
+
   return (
     <div className="flex flex-col gap-3 h-[256px] min-w-0">
       <div className="flex justify-between items-center text-xs shrink-0">
@@ -68,16 +82,15 @@ export function LagRankingTab() {
         </h2>
         <Popover open={showFilters} onOpenChange={setShowFilters}>
           <PopoverTrigger asChild>
-            <button
+            <Button
               type="button"
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 text-muted-foreground hover:text-foreground rounded border border-transparent hover:border-border hover:bg-secondary transition-colors duration-150 outline-none active:scale-[0.98]",
-                showFilters && "bg-secondary border-border text-foreground"
-              )}
+              variant="ghost"
+              size="sm"
+              className={cn("h-7 text-xs gap-1.5", showFilters && "bg-secondary text-foreground")}
             >
               <Icon name="filter" className="size-3" />
               Filter Config
-            </button>
+            </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[400px] p-0 border-border bg-[#0c0c0c]">
             <RankingConfigPanel config={config} onUpdate={updateConfig} />
@@ -86,12 +99,22 @@ export function LagRankingTab() {
       </div>
 
       {!topicLags ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm glass-panel py-8">
-          Connect to a cluster to view topic lag ranking.
+        <div className="glass-panel flex-1 flex items-center justify-center">
+          <EmptyState
+            compact
+            icon="trophy"
+            title="No cluster connected"
+            description="Connect to a cluster to view topic lag ranking."
+          />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm glass-panel py-8">
-          No topics match current filters.
+        <div className="glass-panel flex-1 flex items-center justify-center">
+          <EmptyState
+            compact
+            icon="trophy"
+            title="No topics match"
+            description="No topics match the current filters."
+          />
         </div>
       ) : (
         <div className="glass-panel flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -189,6 +212,11 @@ export function LagRankingTab() {
           </div>
           <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border shrink-0 bg-black/20">
             Showing top {Math.min(filtered.length, 5)} of {topicLags?.length ?? 0} topics
+            {outlier && (
+              <span className="text-amber-400/90">
+                {" "}· Outlier: <span className="font-mono text-foreground truncate inline-block max-w-[220px] align-bottom" title={outlier.topic}>{outlier.topic}</span> at {outlier.lag.toLocaleString()} — {outlier.ratio}× the next topic
+              </span>
+            )}
           </div>
         </div>
       )}

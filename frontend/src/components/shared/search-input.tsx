@@ -7,6 +7,7 @@ interface SearchInputProps {
   placeholder?: string;
   className?: string;
   shortcutHint?: string;
+  disabled?: boolean;
 }
 
 export function SearchInput({
@@ -15,20 +16,22 @@ export function SearchInput({
   placeholder = "Search...",
   className,
   shortcutHint,
+  disabled = false,
 }: SearchInputProps) {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className, disabled && "opacity-50")}>
       <Icon name="search" tone="muted" className="absolute left-3 top-1/2 -translate-y-1/2 size-4" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        disabled={disabled}
         className={cn(
           "w-full h-9 pl-9 pr-3 bg-secondary border border-border rounded-lg",
           "text-sm text-foreground placeholder:text-muted-foreground",
           "focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50",
-          "transition-colors duration-150"
+          "transition-colors duration-150 disabled:cursor-not-allowed"
         )}
       />
       {shortcutHint && (

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useParams, useRouter } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { TopicTabs } from "@/components/topics/topic-tabs";
 import { ProduceMessageModal } from "@/components/topics/produce-message-modal";
 import { MessagesActionDropdown } from "@/components/topics/messages-action-dropdown";
@@ -31,13 +32,15 @@ export function TopicDetailPage() {
 
   return (
     <div className="space-y-6">
-      <button
+      <Button
+        variant="link"
+        size="sm"
         onClick={() => router.history.back()}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="h-auto p-0 gap-1 text-sm text-muted-foreground hover:no-underline"
       >
         <Icon name="chevron-left" className="size-4" />
         Topics
-      </button>
+      </Button>
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div className="space-y-1.5 min-w-0 flex-1">
           <div className="flex items-center gap-2.5 flex-wrap">

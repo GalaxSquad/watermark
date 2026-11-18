@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -109,19 +110,12 @@ export function ImportPreviewModal({
         </DialogBody>
 
         <DialogFooter>
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-sm text-muted-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={!stats.valid || isImporting}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
-          >
+          </Button>
+          <Button onClick={onConfirm} disabled={!stats.valid || isImporting}>
             {isImporting ? "Importing..." : "Apply"}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

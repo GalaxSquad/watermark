@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import type { IconName } from "@/lib/icon-map";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -232,19 +233,16 @@ export function ChartControls({
           </PopoverContent>
         </Popover>
 
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleAdd}
           disabled={addDisabled}
-          className={cn(
-            "flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors",
-            addDisabled
-              ? "bg-secondary text-muted-foreground cursor-not-allowed"
-              : "bg-primary/20 text-primary hover:bg-primary/30",
-          )}
+          className="gap-1 text-xs bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
         >
           <Icon name="plus" className="size-3" tone="brand" />
           Add
-        </button>
+        </Button>
 
         {selectedEntities.length > 0 && (
           <span className="text-xs text-muted-foreground">

@@ -169,13 +169,15 @@ export function UpdateChangelogModal({ isOpen, onClose, updateInfo }: UpdateChan
                 </div>
               ))}
               {!showAll && hiddenCount > 0 && (
-                <button
+                <Button
+                  variant="link"
+                  size="sm"
                   onClick={() => setShowAll(true)}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-auto p-0 gap-1 text-xs text-muted-foreground hover:no-underline"
                 >
                   <Icon name="chevron-down" tone="muted" className="size-3" />
                   Show {hiddenCount} more version{hiddenCount !== 1 ? "s" : ""}
-                </button>
+                </Button>
               )}
             </div>
           )}

@@ -1,5 +1,11 @@
 import { useState, useCallback } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/store/settings";
@@ -8,6 +14,7 @@ import type { TopicTemplate } from "@/types/templates";
 import { GetClusters, ExportTemplatesToFile, ImportTemplatesFromFile } from "@/lib/wails-client";
 import { TemplateListTable } from "./template-list-table";
 import { SaveTemplateModal } from "./save-template-modal";
+import { SettingsCard, SettingsRow } from "@/components/settings/settings-card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,26 +87,24 @@ export function TemplateSettingsPanel() {
   }, [deletingTemplateId, deleteMutation]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Topic Templates</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage reusable topic configurations with auto-match patterns
-        </p>
-      </div>
-
-      {/* Cluster Selector */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <label className="mb-2 block text-sm font-medium text-foreground">
-            Viewing Cluster
-          </label>
+    <div className="space-y-3">
+      <SettingsCard
+        icon="bookmark"
+        title="Topic Templates"
+        description="Manage reusable topic configurations with auto-match patterns"
+        action={
+          <Button onClick={() => setShowCreateModal(true)} size="sm" className="gap-2">
+            <Icon name="plus" className="size-4" />
+            New Template
+          </Button>
+        }
+      >
+        <SettingsRow label="Viewing Cluster">
           <Select
             value={effectiveClusterId ?? ""}
             onValueChange={(v) => setViewingClusterId(v || null)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-64">
               <SelectValue placeholder="Select cluster" />
             </SelectTrigger>
             <SelectContent>
@@ -110,73 +115,82 @@ export function TemplateSettingsPanel() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </SettingsRow>
 
-        <div className="flex items-end gap-2">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
-          >
-            <Icon name="plus" className="size-4" />
-            New Template
-          </button>
-        </div>
-      </div>
+        <SettingsRow>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  checked={importMode === "merge"}
+                  onChange={() => setImportMode("merge")}
+                  className="text-primary"
+                />
+                <span className="text-foreground">Merge</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  checked={importMode === "replace"}
+                  onChange={() => setImportMode("replace")}
+                  className="text-primary"
+                />
+                <span className="text-foreground">Replace</span>
+              </label>
+            </div>
 
-      {/* Import/Export Controls */}
-      <div className="flex items-center gap-4 rounded-lg border border-border/50 bg-card/30 p-4">
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              checked={importMode === "merge"}
-              onChange={() => setImportMode("merge")}
-              className="text-primary"
-            />
-            <span className="text-foreground">Merge</span>
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              checked={importMode === "replace"}
-              onChange={() => setImportMode("replace")}
-              className="text-primary"
-            />
-            <span className="text-foreground">Replace</span>
-          </label>
-        </div>
+            <div className="ml-auto flex gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExport}
+                      disabled={templateList.length === 0}
+                      className="gap-2"
+                    >
+                      <Icon name="download" className="size-3.5" />
+                      Export
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {templateList.length === 0 && (
+                  <TooltipContent side="top" className="text-xs">
+                    Nothing to export — no templates on {clusterName} yet
+                  </TooltipContent>
+                )}
+              </Tooltip>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleImport}
+                className="gap-2"
+              >
+                <Icon name="upload" className="size-3.5" />
+                Import
+              </Button>
+            </div>
+          </div>
+        </SettingsRow>
 
-        <div className="ml-auto flex gap-2">
-          <button
-            onClick={handleExport}
-            disabled={templateList.length === 0}
-            className="flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Icon name="download" className="size-3.5" />
-            Export
-          </button>
-          <button
-            onClick={handleImport}
-            className="flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
-          >
-            <Icon name="upload" className="size-3.5" />
-            Import
-          </button>
-        </div>
-      </div>
+        <SettingsRow>
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-primary">{templateList.length}</span> templates
+            in <span className="font-medium">{clusterName}</span>
+          </div>
+        </SettingsRow>
 
-      {/* Template Count */}
-      <div className="text-sm text-muted-foreground">
-        <span className="font-medium text-primary">{templateList.length}</span> templates
-        in <span className="font-medium">{clusterName}</span>
-      </div>
-
-      {/* Template List */}
-      <TemplateListTable
-        templates={templateList}
-        onEdit={(template) => setEditingTemplate(template)}
-        onDelete={handleDeleteRequest}
-      />
+        <SettingsRow>
+          <TemplateListTable
+            templates={templateList}
+            onEdit={(template) => setEditingTemplate(template)}
+            onDelete={handleDeleteRequest}
+            onCreate={() => setShowCreateModal(true)}
+          />
+        </SettingsRow>
+      </SettingsCard>
 
       {/* Create Modal (empty form) */}
       <SaveTemplateModal

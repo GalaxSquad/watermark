@@ -1,6 +1,8 @@
 import { useState, useMemo, Fragment } from "react";
 import { Icon } from "@/components/ui/icon";
 import { CopyableText } from "@/components/shared/copyable-text";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useDensity } from "@/hooks/use-density";
 import { RowContextMenu, type RowContextMenuItem } from "@/components/shared/row-context-menu";
 import { useReadOnly } from "@/hooks/use-read-only";
 import { cn, copyToClipboard, formatNumber } from "@/lib/utils";
@@ -23,6 +25,7 @@ export function OffsetsLagTable({ groupId, groupState, offsets }: OffsetsLagTabl
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
   const isReadOnly = useReadOnly();
+  const { rowHeight, cellPadding } = useDensity();
 
   // Group offsets by topic, sorted by topic name
   const groups = useMemo<TopicGroup[]>(() => {
@@ -58,27 +61,26 @@ export function OffsetsLagTable({ groupId, groupState, offsets }: OffsetsLagTabl
           <table className="w-full">
             <thead className="sticky top-0 z-10 bg-card">
               <tr>
-                {["Topic", "Partitions", "Total Lag"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left text-[11px] font-mono font-semibold text-muted-foreground uppercase tracking-wider"
-                  >
-                    {h}
-                  </th>
-                ))}
+                <th className={cn("px-4 text-left text-[11px] font-mono font-semibold text-muted-foreground uppercase tracking-wider", cellPadding)}>
+                  Topic
+                </th>
+                <th className={cn("px-4 text-right text-[11px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums", cellPadding)}>
+                  Partitions
+                </th>
+                <th className={cn("px-4 text-right text-[11px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums", cellPadding)}>
+                  Total Lag
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {groups.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Icon name="check-circle" tone="success" className="size-6" />
-                      <span className="font-medium font-sans">No offset or lag data</span>
-                      <span className="text-xs text-muted-foreground/70 font-sans">
-                        This consumer group has no active topic subscriptions or committed offsets.
-                      </span>
-                    </div>
+                  <td colSpan={3} className="px-4 py-0">
+                    <EmptyState
+                      icon="check-circle"
+                      title="No offset or lag data"
+                      description="This consumer group has no active topic subscriptions or committed offsets."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -115,9 +117,10 @@ export function OffsetsLagTable({ groupId, groupState, offsets }: OffsetsLagTabl
                       <RowContextMenu items={topicContextItems}>
                         <tr
                           className="cursor-pointer hover:bg-secondary transition-colors duration-150"
+                          style={{ height: rowHeight }}
                           onClick={() => toggle(g.topic)}
                         >
-                          <td className="px-4 py-3 text-sm font-mono text-foreground">
+                          <td className={cn("px-4 text-sm font-mono text-foreground", cellPadding)}>
                             <div className="flex items-center gap-2 min-w-0">
                               <Icon
                                 name="chevron-right"
@@ -134,10 +137,10 @@ export function OffsetsLagTable({ groupId, groupState, offsets }: OffsetsLagTabl
                               />
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm font-mono tabular-nums text-foreground">
+                          <td className={cn("px-4 text-sm font-mono tabular-nums text-foreground text-right", cellPadding)}>
                             {g.partitions.length}
                           </td>
-                          <td className="px-4 py-3 text-sm font-mono tabular-nums">
+                          <td className={cn("px-4 text-sm font-mono tabular-nums text-right", cellPadding)}>
                             <span
                               className={cn(
                                 g.totalLag > 10000
@@ -163,14 +166,11 @@ export function OffsetsLagTable({ groupId, groupState, offsets }: OffsetsLagTabl
                             <table className="w-full bg-secondary">
                               <thead>
                                 <tr className="border-b border-border">
-                                  {["Partition", "Host", "Current Offset", "End Offset", "Lag"].map((h) => (
-                                    <th
-                                      key={h}
-                                      className="px-6 py-2 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider"
-                                    >
-                                      {h}
-                                    </th>
-                                  ))}
+                                  <th className="px-6 py-2 text-right text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums">Partition</th>
+                                  <th className="px-6 py-2 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Host</th>
+                                  <th className="px-6 py-2 text-right text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums">Current Offset</th>
+                                  <th className="px-6 py-2 text-right text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums">End Offset</th>
+                                  <th className="px-6 py-2 text-right text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums">Lag</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-white/[0.03]">
@@ -198,19 +198,19 @@ export function OffsetsLagTable({ groupId, groupState, offsets }: OffsetsLagTabl
 
                                   const partRow = (
                                     <tr key={p.partition} className="hover:bg-accent/40 transition-colors">
-                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-muted-foreground">
+                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-muted-foreground text-right">
                                         {p.partition}
                                       </td>
                                       <td className="px-6 py-2 text-xs font-mono text-muted-foreground">
                                         {p.host || "—"}
                                       </td>
-                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-foreground">
+                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-foreground text-right">
                                         {formatNumber(p.currentOffset)}
                                       </td>
-                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-foreground">
+                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-foreground text-right">
                                         {formatNumber(p.endOffset)}
                                       </td>
-                                      <td className="px-6 py-2 text-xs font-mono tabular-nums">
+                                      <td className="px-6 py-2 text-xs font-mono tabular-nums text-right">
                                         <span
                                           className={cn(
                                             p.lag > 10000

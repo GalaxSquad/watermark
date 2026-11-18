@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,10 +93,13 @@ export function AlertRefreshControls({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onToggle}
+                aria-label={enabled ? "Pause auto-refresh" : "Resume auto-refresh"}
                 className={cn(
-                  "flex items-center gap-1.5 px-2 py-1.5 text-xs transition-colors",
+                  "h-auto rounded-none gap-1.5 px-2 py-1.5 text-xs",
                   enabled
                     ? "text-emerald-400 hover:text-emerald-300"
                     : "text-muted-foreground hover:text-foreground",
@@ -111,7 +115,7 @@ export function AlertRefreshControls({
                     {secondsLeft}s
                   </span>
                 )}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               {enabled
@@ -125,9 +129,9 @@ export function AlertRefreshControls({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors font-mono">
+            <Button variant="ghost" size="sm" className="h-auto rounded-none px-2 py-1.5 text-[11px] font-mono text-muted-foreground">
               {formatInterval(intervalMs)}
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[120px]">
             <DropdownMenuLabel>Refresh interval</DropdownMenuLabel>
@@ -155,15 +159,12 @@ export function AlertRefreshControls({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
+              variant="outline"
+              size="icon-sm"
               onClick={handleManualRefresh}
               disabled={isCoolingDown}
-              className={cn(
-                "p-1.5 rounded border border-border bg-secondary transition-colors",
-                isCoolingDown
-                  ? "text-muted-foreground cursor-not-allowed opacity-50"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
+              aria-label="Refresh now"
             >
               {isCoolingDown ? (
                 <span className="text-[10px] font-mono tabular-nums w-3.5 h-3.5 flex items-center justify-center">
@@ -178,7 +179,7 @@ export function AlertRefreshControls({
                   )}
                 />
               )}
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
             {isCoolingDown

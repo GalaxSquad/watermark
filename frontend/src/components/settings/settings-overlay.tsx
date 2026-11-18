@@ -46,11 +46,13 @@ export function SettingsOverlay() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === "clusters" && <ClusterList />}
-            {activeTab === "appearance" && <AppearanceForm />}
-            {activeTab === "annotations" && <AnnotationSettingsPanel />}
-            {activeTab === "templates" && <TemplateSettingsPanel />}
-            {activeTab === "system" && <DataSystemForm />}
+            <div className="w-full max-w-[720px]">
+              {activeTab === "clusters" && <ClusterList />}
+              {activeTab === "appearance" && <AppearanceForm />}
+              {activeTab === "annotations" && <AnnotationSettingsPanel />}
+              {activeTab === "templates" && <TemplateSettingsPanel />}
+              {activeTab === "system" && <DataSystemForm />}
+            </div>
           </div>
         </div>
       </DialogContent>

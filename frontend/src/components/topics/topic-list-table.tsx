@@ -1,5 +1,6 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/data-table";
 import { CopyableText } from "@/components/shared/copyable-text";
 import { formatBytes } from "@/lib/utils";
@@ -131,11 +132,12 @@ export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideI
         );
       },
     },
-    { accessorKey: "partitions", header: "Partitions" },
-    { accessorKey: "replicas", header: "Replicas" },
+    { accessorKey: "partitions", header: "Partitions", meta: { align: "right" } },
+    { accessorKey: "replicas", header: "Replicas", meta: { align: "right" } },
     {
       accessorKey: "size",
       header: "Size",
+      meta: { align: "right" },
       cell: ({ row }) => formatBytes(row.original.size),
     },
     { accessorKey: "retention", header: "Retention" },
@@ -149,19 +151,13 @@ export function TopicListTable({ onTopicClick, onCloneTopic, searchFilter, hideI
           <span className="text-xs font-mono text-primary">
             {selectedTopicsForTag.length} selected
           </span>
-          <button
-            onClick={openBatchModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-          >
+          <Button onClick={openBatchModal} size="sm" className="gap-1.5 text-xs">
             <Icon name="tag" className="size-3" />
             Tag Selected
-          </button>
-          <button
-            onClick={clearSelectedTopics}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
+          </Button>
+          <Button onClick={clearSelectedTopics} variant="ghost" size="sm" className="text-xs text-muted-foreground">
             Clear
-          </button>
+          </Button>
         </div>
       )}
 
