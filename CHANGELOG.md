@@ -3,6 +3,16 @@
 All notable changes to Watermark are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.2] - 2026-11-18
+
+- Produce messages in batches: set a message count and a target TPS to push the same payload as load-test traffic, with live progress, cancel, and a summary of sent/failed/achieved throughput
+- Dynamic variables expanded per message in key, value and headers: `${UUID}`, `${GUID}`, `${RANDOM_INT}`, `${RANDOM_FLOAT}`, `${RANDOM_STRING}`, `${TIMESTAMP}`, `${TIMESTAMP_MS}`, `${ISO_TIMESTAMP}` and `${SEQUENCE}`, case-insensitive, with unknown tokens reported instead of silently dropped
+- Fixed: a running batch no longer holds the cluster lock, so switching clusters or disconnecting during a long run is not blocked any more
+- Fixed: a target TPS slow enough to never dispatch a message is rejected, and pacing intervals are clamped
+- Landing page rebuilt on one design system: shared type scale and colour tokens, self-hosted Phosphor icons, share metadata, and a mobile navigation menu
+- Fixed: the landing page no longer renders blank when scripts are blocked or slow, and the hero app preview is visible at the mobile fold
+- Landing install steps now match the release: download the disk image, drag to Applications, and clear the quarantine flag with `xattr -cr`
+
 ## [1.3.1] - 2026-11-12
 
 - Fix Import & Export configuration in Preferences with native OS file dialogs
