@@ -75,15 +75,17 @@ type KafkaService struct {
 	admin         *kadm.Client            // active cluster's admin client
 	mu            sync.RWMutex
 	connected     bool
-	readOnly      bool           // true when the active cluster profile has read-only mode enabled
+	readOnly      bool // true when the active cluster profile has read-only mode enabled
 	activeProfile string
 	ctx           context.Context
 	reaperCancel  context.CancelFunc
-	baseOpts      []kgo.Opt      // active cluster's broker + auth/TLS opts
-	cache         *adminCache    // active cluster's short-TTL metadata cache
-	activeTail    *liveTailState // current live-tail session (at most one)
-	activeTailMu  sync.Mutex     // guards activeTail
-	browseMu      sync.Mutex     // serializes browse/consume operations on k.client
+	baseOpts      []kgo.Opt          // active cluster's broker + auth/TLS opts
+	cache         *adminCache        // active cluster's short-TTL metadata cache
+	activeTail    *liveTailState     // current live-tail session (at most one)
+	activeTailMu  sync.Mutex         // guards activeTail
+	browseMu      sync.Mutex         // serializes browse/consume operations on k.client
+	batchMu       sync.Mutex         // guards batchCancel
+	batchCancel   context.CancelFunc // non-nil while a batch produce run is active
 }
 
 // NewKafkaService creates a new KafkaService with an empty per-cluster connection pool.

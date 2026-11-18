@@ -1,8 +1,21 @@
 import { useState, useRef, useEffect } from "react";
+import { Events } from "@wailsio/runtime";
 import { Icon } from "@/components/ui/icon";
-import { ProduceMessage, ProduceMessages } from "@/lib/wails-client";
-import type { Message, ProduceResult } from "@/types/kafka";
+import {
+  CancelProduceMessageBatch,
+  ProduceMessage,
+  ProduceMessageBatch,
+  ProduceMessages,
+} from "@/lib/wails-client";
+import type {
+  Message,
+  ProduceBatchOptions,
+  ProduceBatchProgress,
+  ProduceBatchSummary,
+  ProduceResult,
+} from "@/types/kafka";
 import { BatchReplayProgress } from "./batch-replay-progress";
+import { ProduceBatchProgressPanel } from "./produce-batch-progress";
 import {
   Dialog,
   DialogContent,
@@ -29,20 +42,131 @@ interface BatchState {
   results: ProduceResult[];
 }
 
+/** Mirrors the backend guards (internal/kafka/batch_produce.go) so bad input fails fast. */
+const MAX_BATCH_COUNT = 1_000_000;
+const MIN_BATCH_TPS = 1 / 300;
+
+interface BatchRunState {
+  phase: "idle" | "running" | "done";
+  progress: ProduceBatchProgress;
+  summary: ProduceBatchSummary | null;
+  error: string | null;
+  cancelling: boolean;
+}
+
+const IDLE_BATCH_RUN: BatchRunState = {
+  phase: "idle",
+  progress: { opId: "", total: 0, sent: 0, failed: 0, elapsedMs: 0, actualTps: 0 },
+  summary: null,
+  error: null,
+  cancelling: false,
+};
+
+function parseHeaders(raw: string): Record<string, string> {
+  if (!raw.trim()) return {};
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Headers must be valid JSON");
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("Headers must be a JSON object");
+  }
+
+  const headers: Record<string, string> = {};
+  for (const [name, value] of Object.entries(parsed as Record<string, unknown>)) {
+    if (typeof value === "string") headers[name] = value;
+    else if (typeof value === "number" || typeof value === "boolean") headers[name] = String(value);
+    else throw new Error(`Header "${name}" must be a string`);
+  }
+  return headers;
+}
+
+/** Returns null when the input cannot be used as a message count. */
+function parseBatchCount(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return 1;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 1) return null;
+  return Math.floor(parsed);
+}
+
+function batchValidationMessage(count: number | null, tps: number): string | null {
+  if (count === null) return "Message count must be a whole number of at least 1";
+  if (count > MAX_BATCH_COUNT) return `Message count must not exceed ${MAX_BATCH_COUNT.toLocaleString()}`;
+  if (!Number.isFinite(tps)) return "Target TPS must be a number";
+  if (tps < 0) return "Target TPS must be 0 or greater";
+  if (tps > 0 && tps < MIN_BATCH_TPS) {
+    return `Target TPS must be 0 (unthrottled) or at least ${MIN_BATCH_TPS.toFixed(4)}`;
+  }
+  return null;
+}
+
+function sendButtonLabel(isBatch: boolean, isReplay: boolean, count: number): string {
+  if (isBatch) return "Replay All";
+  if (isReplay) return "Replay";
+  if (count > 1) return `Send ${count.toLocaleString()} Messages`;
+  return "Send Message";
+}
+
 export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, batchReplaySource }: ProduceMessageModalProps) {
   const isBatch = !!batchReplaySource?.length;
+  const isReplay = !!replaySource;
 
   const [form, setForm] = useState({ partition: -1, key: "", value: "", headers: "" });
   const [status, setStatus] = useState<DeliveryStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
   const [batchState, setBatchState] = useState<BatchState>({ total: 0, completed: 0, failed: 0, results: [] });
+  const [batchCountInput, setBatchCountInput] = useState("1");
+  const [targetTpsInput, setTargetTpsInput] = useState("");
+  const [batchRun, setBatchRun] = useState<BatchRunState>(IDLE_BATCH_RUN);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelledRef = useRef(false);
+  const batchRunningRef = useRef(false);
+  const batchRunIdRef = useRef(0);
 
-  // Cancel in-flight batch when modal closes
+  // Batch send settings — count <= 1 keeps the existing single-send path intact.
+  const requestedCount = parseBatchCount(batchCountInput);
+  const effectiveCount = isReplay ? 1 : requestedCount ?? 1;
+  const parsedTargetTps = targetTpsInput.trim() === "" ? 0 : Number(targetTpsInput);
+  const targetTps = Number.isFinite(parsedTargetTps) && parsedTargetTps > 0 ? parsedTargetTps : 0;
+  const batchValidationError = isReplay ? null : batchValidationMessage(requestedCount, parsedTargetTps);
+
+  // Cancel in-flight work when modal closes
   useEffect(() => {
-    if (!isOpen) cancelledRef.current = true;
-    else cancelledRef.current = false;
+    if (!isOpen) {
+      cancelledRef.current = true;
+      batchRunIdRef.current += 1;
+      if (batchRunningRef.current) {
+        batchRunningRef.current = false;
+        CancelProduceMessageBatch().catch((err) => {
+          console.error("[ProduceBatch] cancel on close failed:", err);
+        });
+      }
+    } else {
+      cancelledRef.current = false;
+      batchRunIdRef.current += 1;
+      setBatchRun(IDLE_BATCH_RUN);
+    }
+  }, [isOpen]);
+
+  // Live progress for the running batch. The state guard discards late events.
+  useEffect(() => {
+    if (!isOpen) return;
+    const cancelProgress = Events.On("produce:batch:progress", (ev) => {
+      const progress = ev.data as ProduceBatchProgress;
+      setBatchRun((prev) => {
+        if (prev.phase !== "running") return prev;
+        // Events are emitted on a timer; a late one from the run we just closed
+        // must not overwrite the counters of the run that replaced it.
+        const stale = prev.progress.opId !== "" && progress.opId !== "" && prev.progress.opId !== progress.opId;
+        if (stale) return prev;
+        return { ...prev, progress };
+      });
+    });
+    return () => cancelProgress();
   }, [isOpen]);
 
   // Pre-fill form for single replay
@@ -71,15 +195,71 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
     return () => { if (successTimerRef.current) clearTimeout(successTimerRef.current); };
   }, []);
 
+  const handleBatchProduce = async (count: number) => {
+    const runId = ++batchRunIdRef.current;
+    // A pending single-send timer must not clear key/value mid-batch.
+    if (successTimerRef.current) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
+    }
+    batchRunningRef.current = true;
+    setStatus("idle");
+    setStatusMessage("");
+    setBatchRun({
+      phase: "running",
+      progress: { opId: "", total: count, sent: 0, failed: 0, elapsedMs: 0, actualTps: 0 },
+      summary: null,
+      error: null,
+      cancelling: false,
+    });
+
+    try {
+      const opts: ProduceBatchOptions = {
+        partition: form.partition,
+        key: form.key,
+        value: form.value,
+        headers: parseHeaders(form.headers),
+        count,
+        targetTps,
+      };
+      const summary = await ProduceMessageBatch(topicName, opts);
+      if (batchRunIdRef.current !== runId) return;
+      setBatchRun((prev) => ({ ...prev, phase: "done", summary, cancelling: false }));
+    } catch (err) {
+      if (batchRunIdRef.current !== runId) return;
+      setBatchRun((prev) => ({
+        ...prev,
+        phase: "done",
+        cancelling: false,
+        error: err instanceof Error ? err.message : String(err),
+      }));
+    } finally {
+      if (batchRunIdRef.current === runId) batchRunningRef.current = false;
+    }
+  };
+
+  const handleCancelBatch = async () => {
+    setBatchRun((prev) => (prev.phase === "running" ? { ...prev, cancelling: true } : prev));
+    try {
+      await CancelProduceMessageBatch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setBatchRun((prev) =>
+        prev.phase === "running" ? { ...prev, cancelling: false, error: `Cancel failed: ${message}` } : prev,
+      );
+    }
+  };
+
   const handleSend = async () => {
+    if (effectiveCount > 1) {
+      await handleBatchProduce(effectiveCount);
+      return;
+    }
+    if (batchRun.phase !== "idle") setBatchRun(IDLE_BATCH_RUN);
     setStatus("sending");
     setStatusMessage("");
     try {
-      let headers: Record<string, string> = {};
-      if (form.headers.trim()) {
-        try { headers = JSON.parse(form.headers); }
-        catch { throw new Error("Headers must be valid JSON"); }
-      }
+      const headers = parseHeaders(form.headers);
       await ProduceMessage(topicName, form.partition, form.key, form.value, headers);
       setStatus("success");
       setStatusMessage(replaySource ? "Message replayed successfully!" : "Message sent successfully!");
@@ -121,7 +301,6 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
     }
   };
 
-  const isReplay = !!replaySource;
   const isDone = isBatch && status === "success";
 
   return (
@@ -199,7 +378,43 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
                   <input type="text" value={form.headers} onChange={(e) => setForm({ ...form, headers: e.target.value })} placeholder='{"Content-Type": "application/json"}'
                     className="w-full h-9 px-3 bg-secondary border border-border rounded-lg text-sm text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                 </div>
+                {!isReplay && (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="produce-batch-count" className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1.5">Message count</label>
+                        <input id="produce-batch-count" type="number" min={1} step={1} value={batchCountInput}
+                          onChange={(e) => setBatchCountInput(e.target.value)}
+                          disabled={batchRun.phase === "running"}
+                          className="w-full h-9 px-3 bg-secondary border border-border rounded-lg text-sm text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50" />
+                      </div>
+                      <div>
+                        <label htmlFor="produce-batch-tps" className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1.5">Target TPS</label>
+                        <input id="produce-batch-tps" type="number" min={0} step={1} value={targetTpsInput} placeholder="0 = unthrottled"
+                          onChange={(e) => setTargetTpsInput(e.target.value)}
+                          disabled={batchRun.phase === "running"}
+                          className="w-full h-9 px-3 bg-secondary border border-border rounded-lg text-sm text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50" />
+                      </div>
+                    </div>
+                    <p className="text-[10px] font-mono text-muted-foreground">
+                      Count &gt; 1 sends the same message repeatedly and expands {"${VARIABLE}"} tokens per message, e.g. {"${SEQUENCE}"}.
+                    </p>
+                    {batchValidationError ? (
+                      <p className="text-[10px] font-mono text-semantic-red">{batchValidationError}</p>
+                    ) : null}
+                  </div>
+                )}
               </div>
+              {batchRun.phase !== "idle" ? (
+                <ProduceBatchProgressPanel
+                  progress={batchRun.progress}
+                  summary={batchRun.summary}
+                  error={batchRun.error}
+                  isRunning={batchRun.phase === "running"}
+                  isCancelling={batchRun.cancelling}
+                  onCancel={handleCancelBatch}
+                />
+              ) : null}
               {status !== "idle" && (
                 <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono ${
                   status === "sending" ? "bg-primary/10 text-primary" :
@@ -223,11 +438,11 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
           {!isDone && (
             <button
               onClick={isBatch ? handleBatchReplay : handleSend}
-              disabled={status === "sending" || (!isBatch && !form.value.trim())}
+              disabled={status === "sending" || batchRun.phase === "running" || (!isBatch && !form.value.trim()) || (!isBatch && !!batchValidationError)}
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
             >
-              {status === "sending" && <Icon name="loader" className="size-3.5 animate-spin" />}
-              {isBatch ? "Replay All" : isReplay ? "Replay" : "Send Message"}
+              {(status === "sending" || batchRun.phase === "running") && <Icon name="loader" className="size-3.5 animate-spin" />}
+              {sendButtonLabel(isBatch, isReplay, effectiveCount)}
             </button>
           )}
         </DialogFooter>

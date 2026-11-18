@@ -16,6 +16,14 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as $models from "./models.js";
 
 /**
+ * CancelProduceMessageBatch stops the running batch, if any. It is a no-op when
+ * nothing is running. The cancelled run returns normally with Cancelled=true.
+ */
+export function CancelProduceMessageBatch(): $CancellablePromise<void> {
+    return $Call.ByID(2195922654);
+}
+
+/**
  * ClearCache invalidates the in-memory metadata cache so the next
  * API call fetches fresh data from the Kafka cluster.
  * Exposed to the frontend via Wails binding for manual refresh.
@@ -290,13 +298,25 @@ export function ProduceMessage(topicName: string, partition: number, key: string
 }
 
 /**
+ * ProduceMessageBatch sends opts.Value opts.Count times to topicName, expanding
+ * ${VARIABLE} tokens in the key, value and header values for every message.
+ * Progress is emitted on "produce:batch:progress"; the returned summary is
+ * authoritative. A cancelled run returns a summary with Cancelled=true and no error.
+ */
+export function ProduceMessageBatch(topicName: string, opts: $models.ProduceBatchOptions): $CancellablePromise<$models.ProduceBatchSummary> {
+    return $Call.ByID(1101688256, topicName, opts).then(($result: any) => {
+        return $$createType28($result);
+    });
+}
+
+/**
  * ProduceMessages sends a batch of messages to a topic concurrently and returns per-message results.
  * Partial failures are reported individually — successful messages are not rolled back.
  * Delegates to ProduceMessage for each item to avoid duplicated record-building logic.
  */
 export function ProduceMessages(topicName: string, messages: $models.ProduceMessageRequest[]): $CancellablePromise<$models.ProduceResult[]> {
     return $Call.ByID(277774337, topicName, messages).then(($result: any) => {
-        return $$createType29($result);
+        return $$createType30($result);
     });
 }
 
@@ -378,5 +398,6 @@ const $$createType24 = $Create.Array($$createType23);
 const $$createType25 = $models.Partition.createFrom;
 const $$createType26 = $Create.Array($$createType25);
 const $$createType27 = $Create.Array($$createType19);
-const $$createType28 = $models.ProduceResult.createFrom;
-const $$createType29 = $Create.Array($$createType28);
+const $$createType28 = $models.ProduceBatchSummary.createFrom;
+const $$createType29 = $models.ProduceResult.createFrom;
+const $$createType30 = $Create.Array($$createType29);
