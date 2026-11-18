@@ -20,10 +20,15 @@ func TestValidateBatchOptions(t *testing.T) {
 	}{
 		{"valid zero tps", ProduceBatchOptions{Count: 1, TargetTPS: 0}, false},
 		{"valid positive tps", ProduceBatchOptions{Count: 100, TargetTPS: 250}, false},
+		{"valid slowest tps", ProduceBatchOptions{Count: 1, TargetTPS: minBatchTPS}, false},
 		{"count zero", ProduceBatchOptions{Count: 0}, true},
 		{"count negative", ProduceBatchOptions{Count: -5}, true},
 		{"count over guard", ProduceBatchOptions{Count: maxBatchCount + 1}, true},
 		{"tps negative", ProduceBatchOptions{Count: 1, TargetTPS: -0.5}, true},
+		// An interval this slow saturates time.Duration instead of going
+		// negative, so the run would never dispatch and only end on cancel.
+		{"tps below floor", ProduceBatchOptions{Count: 1, TargetTPS: 1e-9}, true},
+		{"tps just below floor", ProduceBatchOptions{Count: 1, TargetTPS: minBatchTPS / 2}, true},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

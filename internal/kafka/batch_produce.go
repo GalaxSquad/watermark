@@ -36,6 +36,16 @@ const (
 	// and observed TPS for runs of at least one second, assuming the broker keeps
 	// up (workers are not the bottleneck). Tests assert against this bound.
 	batchPacingTolerance = 0.20
+
+	// minBatchTPS is the slowest pace worth running — one message every five
+	// minutes. Slower than this a run is indistinguishable from a hang, and the
+	// time.Duration conversion of the interval saturates far sooner than it
+	// turns negative, so it cannot be detected downstream.
+	minBatchTPS = 1.0 / 300
+
+	// maxBatchInterval caps one pacing interval as a second line of defence for
+	// callers that bypass validateBatchOptions.
+	maxBatchInterval = 5 * time.Minute
 )
 
 // ErrProduceBatchInProgress is returned when a second batch is started while one
@@ -97,12 +107,20 @@ func (k *KafkaService) ProduceMessageBatch(topicName string, opts ProduceBatchOp
 	}
 	defer k.endBatch(cancel)
 
-	// Hold the service lock for the whole batch: the client must not be swapped
-	// or closed mid-run, and ensureWritable needs at least an RLock.
+	// Take the client reference under the lock, then release it: a batch can run
+	// for minutes, and holding k.mu.RLock would block Connect/Disconnect and the
+	// idle reaper for the whole run. kgo clients are safe for concurrent use, so
+	// a concurrent cluster switch closes this client and the in-flight messages
+	// fail individually instead of wedging the UI.
 	k.mu.RLock()
-	defer k.mu.RUnlock()
-	if err := k.ensureWritable(); err != nil {
+	err = k.ensureWritable()
+	client := k.client
+	k.mu.RUnlock()
+	if err != nil {
 		return ProduceBatchSummary{}, err
+	}
+	if client == nil {
+		return ProduceBatchSummary{}, ErrNotConnected
 	}
 
 	opID := uuid.NewString()
@@ -124,7 +142,7 @@ func (k *KafkaService) ProduceMessageBatch(topicName string, opts ProduceBatchOp
 	}
 
 	send := func(sendCtx context.Context, seq int) error {
-		return produceBatchRecord(sendCtx, k.client, topicName, opts, seq)
+		return produceBatchRecord(sendCtx, client, topicName, opts, seq)
 	}
 	outcome := runPacedBatch(ctx, opts.Count, opts.TargetTPS, batchConcurrency, emitProgress, send)
 
@@ -190,6 +208,12 @@ func validateBatchOptions(opts ProduceBatchOptions) error {
 	}
 	if opts.TargetTPS < 0 {
 		return fmt.Errorf("produce batch: target tps must not be negative, got %v", opts.TargetTPS)
+	}
+	if opts.TargetTPS > 0 && opts.TargetTPS < minBatchTPS {
+		return fmt.Errorf(
+			"produce batch: target tps must be 0 (unthrottled) or at least %.4f, got %v",
+			minBatchTPS, opts.TargetTPS,
+		)
 	}
 	return nil
 }
@@ -278,6 +302,9 @@ func runPacedBatch(
 		interval := time.Duration(float64(time.Second) / targetTPS)
 		if interval <= 0 {
 			interval = time.Nanosecond
+		}
+		if interval > maxBatchInterval {
+			interval = maxBatchInterval
 		}
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()

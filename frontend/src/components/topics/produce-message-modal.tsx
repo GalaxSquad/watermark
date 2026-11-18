@@ -42,8 +42,9 @@ interface BatchState {
   results: ProduceResult[];
 }
 
-/** Mirrors the backend maxBatchCount guard so oversized runs fail fast in the UI. */
+/** Mirrors the backend guards (internal/kafka/batch_produce.go) so bad input fails fast. */
 const MAX_BATCH_COUNT = 1_000_000;
+const MIN_BATCH_TPS = 1 / 300;
 
 interface BatchRunState {
   phase: "idle" | "running" | "done";
@@ -63,16 +64,51 @@ const IDLE_BATCH_RUN: BatchRunState = {
 
 function parseHeaders(raw: string): Record<string, string> {
   if (!raw.trim()) return {};
+
+  let parsed: unknown;
   try {
-    return JSON.parse(raw) as Record<string, string>;
+    parsed = JSON.parse(raw);
   } catch {
     throw new Error("Headers must be valid JSON");
   }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("Headers must be a JSON object");
+  }
+
+  const headers: Record<string, string> = {};
+  for (const [name, value] of Object.entries(parsed as Record<string, unknown>)) {
+    if (typeof value === "string") headers[name] = value;
+    else if (typeof value === "number" || typeof value === "boolean") headers[name] = String(value);
+    else throw new Error(`Header "${name}" must be a string`);
+  }
+  return headers;
 }
 
-function parseBatchCount(raw: string): number {
-  const parsed = Math.floor(Number(raw));
-  return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, MAX_BATCH_COUNT) : 1;
+/** Returns null when the input cannot be used as a message count. */
+function parseBatchCount(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return 1;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 1) return null;
+  return Math.floor(parsed);
+}
+
+function batchValidationMessage(count: number | null, tps: number): string | null {
+  if (count === null) return "Message count must be a whole number of at least 1";
+  if (count > MAX_BATCH_COUNT) return `Message count must not exceed ${MAX_BATCH_COUNT.toLocaleString()}`;
+  if (!Number.isFinite(tps)) return "Target TPS must be a number";
+  if (tps < 0) return "Target TPS must be 0 or greater";
+  if (tps > 0 && tps < MIN_BATCH_TPS) {
+    return `Target TPS must be 0 (unthrottled) or at least ${MIN_BATCH_TPS.toFixed(4)}`;
+  }
+  return null;
+}
+
+function sendButtonLabel(isBatch: boolean, isReplay: boolean, count: number): string {
+  if (isBatch) return "Replay All";
+  if (isReplay) return "Replay";
+  if (count > 1) return `Send ${count.toLocaleString()} Messages`;
+  return "Send Message";
 }
 
 export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, batchReplaySource }: ProduceMessageModalProps) {
@@ -93,16 +129,10 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
 
   // Batch send settings — count <= 1 keeps the existing single-send path intact.
   const requestedCount = parseBatchCount(batchCountInput);
-  const effectiveCount = isReplay ? 1 : requestedCount;
-  const parsedTargetTps = Number(targetTpsInput);
+  const effectiveCount = isReplay ? 1 : requestedCount ?? 1;
+  const parsedTargetTps = targetTpsInput.trim() === "" ? 0 : Number(targetTpsInput);
   const targetTps = Number.isFinite(parsedTargetTps) && parsedTargetTps > 0 ? parsedTargetTps : 0;
-  const batchValidationError = isReplay
-    ? null
-    : Math.floor(Number(batchCountInput)) > MAX_BATCH_COUNT
-      ? `Message count must not exceed ${MAX_BATCH_COUNT.toLocaleString()}`
-      : parsedTargetTps < 0
-        ? "Target TPS must be 0 or greater"
-        : null;
+  const batchValidationError = isReplay ? null : batchValidationMessage(requestedCount, parsedTargetTps);
 
   // Cancel in-flight work when modal closes
   useEffect(() => {
@@ -127,7 +157,14 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
     if (!isOpen) return;
     const cancelProgress = Events.On("produce:batch:progress", (ev) => {
       const progress = ev.data as ProduceBatchProgress;
-      setBatchRun((prev) => (prev.phase === "running" ? { ...prev, progress } : prev));
+      setBatchRun((prev) => {
+        if (prev.phase !== "running") return prev;
+        // Events are emitted on a timer; a late one from the run we just closed
+        // must not overwrite the counters of the run that replaced it.
+        const stale = prev.progress.opId !== "" && progress.opId !== "" && prev.progress.opId !== progress.opId;
+        if (stale) return prev;
+        return { ...prev, progress };
+      });
     });
     return () => cancelProgress();
   }, [isOpen]);
@@ -405,7 +442,7 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
             >
               {(status === "sending" || batchRun.phase === "running") && <Icon name="loader" className="size-3.5 animate-spin" />}
-              {isBatch ? "Replay All" : effectiveCount > 1 ? `Send ${effectiveCount.toLocaleString()} Messages` : isReplay ? "Replay" : "Send Message"}
+              {sendButtonLabel(isBatch, isReplay, effectiveCount)}
             </button>
           )}
         </DialogFooter>
