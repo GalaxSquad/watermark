@@ -13,25 +13,80 @@
     --color-border-hover: rgba(139, 92, 246, 0.5);
     
     --color-purple: #8b5cf6;
-    --color-purple-hover: #7c3aed;
+    /* Filled surfaces that carry white text: darkened so #fff clears 4.5:1. */
+    --color-cta: #7c3aed;
+    --color-cta-hover: #6d28d9;
     --color-green: #10b981;
     --color-blue: #60a5fa;
+    --color-cyan: #06b6d4;
+    --color-yellow: #eab308;   /* chart series C */
+    --color-warning: #f59e0b;
+    --color-critical: #ef4444;
+    --color-purple-soft: #c084fc;   /* gradient end of .text-gradient */
+    --color-purple-tint: #c4b5fd;   /* purple text on a tinted purple chip */
     --color-accent: #171717;
 
     /* Text Colors */
     --color-text-main: #d4d4d8;
     --color-text-muted: #a1a1aa;
     --color-text-heading: #ffffff;
+    --color-text-inverse: #ffffff;  /* text on a filled accent surface */
+
+    /* Mockup surfaces — the fake app window has its own 4-step elevation so it
+       reads as a separate plane instead of page content. Never use these for
+       real page chrome. */
+    --mockup-sunken: #080808;
+    --mockup-surface: #0c0c0c;
+    --mockup-raised: #111111;
+    --mockup-chrome: #1a1a1a;
+
+    /* Recurring alpha tints, derived from the brand colours so the triple is
+       never repeated by hand. One-off alphas stay inline at their own site. */
+    --tint-purple: color-mix(in srgb, var(--color-purple) 15%, transparent);
+    --tint-green: color-mix(in srgb, var(--color-green) 15%, transparent);
+    --tint-green-faint: color-mix(in srgb, var(--color-green) 8%, transparent);
+    --tint-red: color-mix(in srgb, var(--color-critical) 20%, transparent);
 
     /* Typography */
     --font-heading: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-body: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
+    /* Page type scale. One ladder, ~1.12 step below 24px and wider steps above
+       so section titles outrank feature titles. Page-level rules may only use
+       these; the mockup has its own micro-ladder because it is decoration. */
+    --text-xs: 0.75rem;      /* 12 */
+    --text-sm: 0.8125rem;    /* 13 */
+    --text-base: 0.875rem;   /* 14 */
+    --text-md: 0.9375rem;    /* 15 */
+    --text-lg: 1rem;         /* 16 */
+    --text-lead: 1.0625rem;  /* 17 */
+    --text-xl: 1.125rem;     /* 18 */
+    --text-2xl: 1.25rem;     /* 20 */
+    --text-3xl: 1.375rem;    /* 22 — feature titles */
+    --text-4xl: 1.5rem;      /* 24 */
+    --text-5xl: 1.625rem;    /* 26 — section titles on narrow screens */
+    --text-6xl: 1.875rem;    /* 30 — section titles */
+    --text-hero: clamp(2rem, 8.6vw, 4.5rem);
+    --icon-xl: 32px;         /* oversized decorative icons (bento cards) */
+    --icon-lg: 24px;         /* icon inside a 48px .icon-box */
+
+    /* Mockup micro-scale — one rung per distinct chrome size, no arbitrary px. */
+    --mockup-text-2xs: 9px;
+    --mockup-text-xs: 10px;
+    --mockup-text-sm: 11px;
+    --mockup-text-md: 12px;
+    --mockup-text-lg: 14px;
+    --mockup-text-xl: 16px;
+    --mockup-text-stat: clamp(17px, 4.6vw, 20px);
+
     /* Transitions & Box Shadow */
     --transition-fast: 0.2s ease;
     --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.4);
+
+    /* Layout */
+    --nav-height: 64px;
 }
 
 /* =========================================================================
@@ -44,7 +99,9 @@
 }
 
 html {
-    scroll-behavior: smooth;
+    /* Anchor scrolling is animated in script.js, so a JS-less page (and
+       screenshot tools) still jump instantly and land in the right place. */
+    scroll-behavior: auto;
 }
 
 body {
@@ -54,14 +111,13 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
     position: relative;
     /* Selection */
 }
 
 ::selection {
     background: var(--color-purple);
-    color: #fff;
+    color: var(--color-text-inverse);
 }
 
 a {
@@ -77,18 +133,20 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 
 .skip-link {
     position: absolute;
-    top: -40px;
+    top: 0;
     left: 20px;
-    background: var(--color-purple);
+    background: var(--color-cta);
     color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 10px 16px;
+    border-radius: 0 0 8px 8px;
     z-index: 100;
-    transition: top 0.2s;
+    transform: translateY(-150%);
+    transition: transform 0.2s ease;
 }
 
-.skip-link:focus {
-    top: 20px;
+.skip-link:focus,
+.skip-link:focus-visible {
+    transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -113,6 +171,11 @@ img {
 
 .text-center {
     text-align: center;
+}
+
+/* Skip the fixed header when an in-page anchor is followed. */
+section[id] {
+    scroll-margin-top: 88px;
 }
 
 /* =========================================================================
@@ -152,7 +215,7 @@ img {
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 800px;
+    width: min(800px, 100%);
     height: 450px;
     background: radial-gradient(ellipse at top center, rgba(139, 92, 246, 0.12) 0%, rgba(96, 165, 250, 0.04) 45%, transparent 70%);
     filter: blur(60px);
@@ -173,24 +236,40 @@ img {
 
 /* =========================================================================
    Navigation
+   The bar is fixed only once script.js marks the document as nav-ready. With
+   JavaScript missing, the link row wraps into a second header row instead of
+   being hidden behind a toggle that cannot open.
    ========================================================================= */
 .navbar {
-    position: fixed;
+    position: relative;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 50;
     background-color: var(--color-bg-header);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--color-border);
 }
 
+html.nav-ready .navbar {
+    position: sticky;
+    z-index: 50;
+}
+
 .navbar-inner {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    height: 64px;
+    gap: 8px 16px;
+    min-height: var(--nav-height);
+    padding-block: 10px;
+}
+
+html.nav-ready .navbar-inner {
+    flex-wrap: nowrap;
+    height: var(--nav-height);
+    padding-block: 0;
 }
 
 .logo {
@@ -203,20 +282,32 @@ img {
 .logo-text {
     color: var(--color-text-heading);
     font-weight: 600;
-    font-size: 1.125rem;
+    font-size: var(--text-xl);
     letter-spacing: 0.025em;
 }
 
 .nav-links {
-    display: none;
-    gap: 32px;
-    font-size: 0.875rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+    font-size: var(--text-base);
     font-weight: 500;
+    order: 3;
+    width: 100%;
+}
+
+.nav-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
 }
 
 @media (min-width: 768px) {
     .nav-links {
-        display: flex;
+        order: 0;
+        width: auto;
+        gap: 32px;
     }
 }
 
@@ -227,21 +318,98 @@ img {
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
+    margin-left: auto;
+}
+
+html.nav-ready .nav-actions {
+    margin-left: 0;
 }
 
 .github-link {
     color: var(--color-text-muted);
-    font-size: 1.5rem;
-    display: flex;
+    font-size: var(--text-4xl);
+    display: none;
     align-items: center;
     justify-content: center;
     min-width: 44px;
     min-height: 44px;
 }
 
+@media (min-width: 768px) {
+    .github-link {
+        display: flex;
+    }
+}
+
 .github-link:hover {
     color: var(--color-text-heading);
+}
+
+.nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--color-text-heading);
+    font-size: var(--text-2xl);
+    cursor: pointer;
+}
+
+.nav-toggle:hover {
+    border-color: var(--color-border-hover);
+}
+
+/* JavaScript menu: collapsed by default, opened by .nav-toggle. */
+@media (max-width: 767px) {
+    html.nav-ready .nav-toggle {
+        display: inline-flex;
+    }
+
+    html.nav-ready .nav-links {
+        display: none;
+    }
+
+    html.nav-ready .nav-links.is-open {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        padding: 8px 24px 16px;
+        background-color: var(--color-bg);
+        border-bottom: 1px solid var(--color-border);
+        font-size: var(--text-lg);
+    }
+
+    html.nav-ready .nav-links.is-open a {
+        width: 100%;
+        padding-block: 12px;
+    }
+
+    .navbar .btn {
+        padding: 8px 12px;
+        font-size: var(--text-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar .btn {
+        padding: 8px 10px;
+        font-size: var(--text-xs);
+    }
+
+    .navbar .logo-text {
+        font-size: var(--text-lg);
+    }
 }
 
 /* Buttons */
@@ -252,34 +420,37 @@ img {
     gap: 8px;
     padding: 8px 16px;
     border-radius: 8px;
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
     border: none;
     text-decoration: none;
+    white-space: nowrap;
     min-height: 44px;
 }
 
 .btn-large {
-    padding: 12px 32px;
-    font-size: 1rem;
+    padding: 12px 24px;
+    font-size: var(--text-lg);
+    min-height: 52px;
     width: 100%;
 }
 
 @media (min-width: 640px) {
     .btn-large {
         width: auto;
+        padding: 12px 32px;
     }
 }
 
 .btn-primary {
-    background-color: var(--color-purple);
-    color: #fff;
+    background-color: var(--color-cta);
+    color: var(--color-text-inverse);
 }
 
 .btn-primary:hover {
-    background-color: var(--color-purple-hover);
+    background-color: var(--color-cta-hover);
 }
 
 .btn-glow {
@@ -298,34 +469,23 @@ img {
 }
 
 .btn-outline:hover {
-    background-color: #262626;
-}
-
-.btn-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    line-height: 1.2;
-}
-
-.btn-subtitle {
-    font-size: 0.7rem;
-    opacity: 0.8;
-    font-weight: 400;
+    background-color: var(--color-border);
 }
 
 .quickstart-actions {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 24px;
 }
 
 @media (min-width: 640px) {
     .quickstart-actions {
         flex-direction: row;
+        align-items: center;
+        gap: 16px;
     }
 }
 
@@ -334,58 +494,60 @@ img {
    ========================================================================= */
 .hero {
     position: relative;
-    padding-top: 128px;
+    padding-top: 56px;
     padding-bottom: 80px;
     z-index: 10;
     text-align: center;
 }
 
 .hero-title {
-    font-size: 3rem;
+    font-size: var(--text-hero);
     line-height: 1.1;
     font-weight: 700;
     color: var(--color-text-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     margin-bottom: 24px;
-}
-
-@media (min-width: 768px) {
-    .hero-title {
-        font-size: 4.5rem;
-    }
+    text-wrap: balance;
 }
 
 .text-gradient {
-    background-image: linear-gradient(to right, var(--color-purple), #c084fc);
+    background-image: linear-gradient(to right, var(--color-purple), var(--color-purple-soft));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    /* One span, so a wrapped gradient keeps a single continuous gradient. */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
 .hero-subtitle {
-    font-size: 1.125rem;
+    font-size: var(--text-lead);
     color: var(--color-text-muted);
     max-width: 672px;
-    margin: 0 auto 40px auto;
+    margin: 0 auto 32px auto;
     line-height: 1.7;
 }
 
 @media (min-width: 768px) {
     .hero-subtitle {
-        font-size: 1.25rem;
+        font-size: var(--text-2xl);
+        margin-bottom: 40px;
     }
 }
 
 .hero-actions {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 @media (min-width: 640px) {
     .hero-actions {
         flex-direction: row;
+        align-items: center;
+        gap: 16px;
     }
 }
 
@@ -443,7 +605,7 @@ img {
 }
 
 .section-title {
-    font-size: 1.875rem;
+    font-size: var(--text-6xl);
     font-weight: 700;
     color: var(--color-text-heading);
     margin-bottom: 24px;
@@ -454,7 +616,7 @@ img {
 }
 
 .why-content {
-    font-size: 1.125rem;
+    font-size: var(--text-xl);
     color: var(--color-text-muted);
     line-height: 1.7;
 }
@@ -488,6 +650,12 @@ img {
     gap: 48px;
 }
 
+.feature-text,
+.feature-image {
+    min-width: 0;
+    width: 100%;
+}
+
 @media (min-width: 768px) {
     .feature-row {
         flex-direction: row;
@@ -509,7 +677,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: var(--icon-lg);
     margin-bottom: 24px;
 }
 
@@ -518,14 +686,14 @@ img {
 .icon-box.green { background-color: rgba(16, 185, 129, 0.1); color: var(--color-green); }
 
 .feature-title {
-    font-size: 1.875rem;
+    font-size: var(--text-3xl);
     font-weight: 700;
     color: var(--color-text-heading);
     margin-bottom: 16px;
 }
 
 .feature-desc {
-    font-size: 1.125rem;
+    font-size: var(--text-xl);
     color: var(--color-text-muted);
     margin-bottom: 24px;
 }
@@ -546,18 +714,7 @@ img {
 
 .feature-list i {
     color: var(--color-green);
-    font-size: 1.25rem;
-}
-
-.feature-image img {
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    transition: transform var(--transition-smooth);
-}
-
-.feature-image:hover img {
-    transform: translateY(-4px) scale(1.01);
+    font-size: var(--text-2xl);
 }
 
 /* =========================================================================
@@ -602,7 +759,7 @@ img {
 }
 
 .bento-card i {
-    font-size: 32px;
+    font-size: var(--icon-xl);
     margin-bottom: 16px;
     display: inline-block;
 }
@@ -612,20 +769,20 @@ img {
 .icon-green { color: var(--color-green); }
 .icon-neutral { color: var(--color-text-muted); }
 
-.bento-card h4 {
-    font-size: 1.125rem;
+.bento-card h3 {
+    font-size: var(--text-xl);
     font-weight: 700;
     color: var(--color-text-heading);
     margin-bottom: 8px;
 }
 
 .bento-card p {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--color-text-muted);
 }
 
 /* =========================================================================
-   Quick Start / Terminal
+   Quick Start
    ========================================================================= */
 .quickstart {
     padding: 96px 0;
@@ -633,77 +790,110 @@ img {
     overflow: hidden;
 }
 
-.terminal {
-    max-width: 672px;
-    margin: 0 auto;
+.section-header .section-subtitle {
+    max-width: 560px;
+    margin-inline: auto;
+}
+
+.quickstart-steps {
+    counter-reset: step;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+    margin-bottom: 40px;
+}
+
+.quickstart-steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 20px 20px 20px 68px;
     background-color: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: 12px;
-    overflow: hidden;
-    text-align: left;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-    margin-bottom: 32px;
 }
 
-.terminal-header {
-    height: 40px;
-    background-color: var(--color-accent);
-    border-bottom: 1px solid var(--color-border);
+.quickstart-steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    padding: 0 16px;
-    gap: 8px;
+    justify-content: center;
+    background-color: var(--tint-purple);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 600;
 }
 
-.terminal-shell {
-    margin-left: 16px;
-    font-size: 0.75rem;
-    font-family: var(--font-mono);
+.step-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-text-heading);
+    margin-bottom: 4px;
+}
+
+.quickstart-steps p {
+    font-size: var(--text-md);
     color: var(--color-text-muted);
 }
 
-.terminal-body {
-    padding: 24px;
+.quickstart-steps a {
+    color: var(--color-text-heading);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border);
+    text-underline-offset: 3px;
+}
+
+.quickstart-steps a:hover {
+    text-decoration-color: var(--color-purple);
+}
+
+.quickstart-steps code {
+    padding: 2px 6px;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
     font-family: var(--font-mono);
-    font-size: 0.875rem;
-    color: var(--color-text-main);
+    font-size: 0.875em;
+    color: var(--color-text-heading);
+}
+
+.quickstart-steps .cmd {
+    display: block;
+    margin-top: 10px;
+    padding: 10px 12px;
     overflow-x: auto;
-}
-
-.terminal-comment {
-    color: var(--color-text-muted);
-    margin-bottom: 8px;
-}
-
-.terminal-cmd {
-    margin-bottom: 8px;
-}
-
-.terminal-cmd .cmd {
-    color: var(--color-purple);
+    font-size: var(--text-sm);
+    white-space: pre;
 }
 
 .social-proof {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 8px 20px;
     color: var(--color-text-muted);
-    font-size: 1rem;
+    font-size: var(--text-md);
 }
 
 .social-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
+    min-height: 44px;
 }
 
 .social-link:hover {
     color: var(--color-text-heading);
-}
-
-.dot-separator {
-    color: var(--color-border);
 }
 
 /* =========================================================================
@@ -736,15 +926,23 @@ img {
 }
 
 .footer-desc {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--color-text-muted);
 }
 
 .footer-links {
     display: flex;
-    gap: 24px;
-    font-size: 0.875rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 24px;
+    font-size: var(--text-base);
     color: var(--color-text-muted);
+}
+
+.footer-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
 }
 
 .footer-links a:hover {
@@ -752,7 +950,7 @@ img {
 }
 
 .footer-copy {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--color-text-muted);
 }
 
@@ -760,12 +958,14 @@ img {
    Monitoring Dashboard Mockup
    ========================================================================= */
 .mockup-app {
-    background-color: #0c0c0c;
+    background-color: var(--mockup-surface);
     border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 16px;
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     overflow: hidden;
+    min-width: 0;
+    text-align: left;
     box-shadow: 0 20px 40px rgba(0,0,0,0.6);
 }
 
@@ -777,7 +977,7 @@ img {
 }
 
 .mockup-page-title {
-    font-size: 16px;
+    font-size: var(--mockup-text-xl);
     font-weight: 700;
     color: var(--color-text-heading);
     letter-spacing: 0.08em;
@@ -788,11 +988,11 @@ img {
     align-items: center;
     gap: 8px;
     color: var(--color-text-muted);
-    font-size: 14px;
+    font-size: var(--mockup-text-lg);
 }
 
 .mockup-indicator {
-    font-size: 10px;
+    font-size: var(--mockup-text-xs);
     font-family: var(--font-mono);
     padding: 2px 6px;
     border-radius: 4px;
@@ -800,20 +1000,48 @@ img {
 }
 
 .mockup-indicator.green {
-    background-color: rgba(16, 185, 129, 0.15);
+    background-color: var(--tint-green);
     color: var(--color-green);
 }
 
 /* Tables Row */
 .mockup-tables-row {
     display: flex;
+    flex-direction: column;
     gap: 12px;
     margin-bottom: 16px;
 }
 
+/* Side by side only when the mockup itself is wide enough for two tables;
+   the shipped viewport width is a poor proxy for the mockup's own width. */
+.feature-image {
+    container-type: inline-size;
+}
+
+@container (min-width: 520px) {
+    .mockup-tables-row {
+        flex-direction: row;
+    }
+}
+
+/* Columns that only earn their space once the mockup itself is wide enough. */
+@container (max-width: 400px) {
+    .mockup-table .col-optional {
+        display: none;
+    }
+
+    .mockup-tag-sep {
+        display: none;
+    }
+
+    .mockup-cluster-actions i {
+        display: none;
+    }
+}
+
 .mockup-table-block {
     flex: 1;
-    background: #080808;
+    background: var(--mockup-sunken);
     border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 10px;
@@ -828,17 +1056,17 @@ img {
 }
 
 .mockup-table-icon {
-    font-size: 12px;
+    font-size: var(--mockup-text-md);
     display: flex;
     align-items: center;
 }
 
 .mockup-table-icon.purple { color: var(--color-purple); }
-.mockup-table-icon.cyan { color: #06b6d4; }
+.mockup-table-icon.cyan { color: var(--color-cyan); }
 .mockup-table-icon.blue { color: var(--color-blue); }
 
 .mockup-table-label {
-    font-size: 10px;
+    font-size: var(--mockup-text-xs);
     font-weight: 600;
     color: var(--color-text-heading);
     letter-spacing: 0.05em;
@@ -847,40 +1075,64 @@ img {
 .mockup-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: var(--mockup-text-xs);
 }
 
 .mockup-table thead th {
     color: var(--color-text-muted);
     font-weight: 500;
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     text-align: left;
     padding: 4px 6px;
     border-bottom: 1px solid var(--color-border);
     letter-spacing: 0.04em;
+    white-space: nowrap;
 }
 
 .mockup-table tbody td {
     padding: 4px 6px;
     color: var(--color-text-main);
     border-bottom: 1px solid rgba(38,38,38,0.5);
+    vertical-align: middle;
+}
+
+.mockup-table tbody td.mono {
+    white-space: nowrap;
+}
+
+.mockup-table .num {
+    text-align: right;
+}
+
+/* Small caret that marks the sorted column, drawn without a font glyph. */
+.sort-caret {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 4px;
+    vertical-align: middle;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid currentColor;
+    opacity: 0.7;
 }
 
 .mockup-table tbody td.mono {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--mockup-text-xs);
 }
 
 .badge {
     display: inline-block;
     padding: 1px 6px;
     border-radius: 4px;
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .badge.stable {
-    background-color: rgba(16, 185, 129, 0.15);
+    background-color: var(--tint-green);
     color: var(--color-green);
 }
 
@@ -896,15 +1148,15 @@ img {
 }
 
 .lag-val.high {
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 .lag-val.critical {
-    color: #ef4444;
+    color: var(--color-critical);
 }
 
 .mockup-table-footer {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     color: var(--color-text-muted);
     margin-top: 6px;
     padding-top: 4px;
@@ -912,7 +1164,7 @@ img {
 
 /* Lag Visualization */
 .mockup-viz-section {
-    background: #080808;
+    background: var(--mockup-sunken);
     border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 10px;
@@ -926,7 +1178,7 @@ img {
 }
 
 .mockup-viz-title {
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     font-weight: 600;
     color: var(--color-text-heading);
     letter-spacing: 0.05em;
@@ -946,7 +1198,7 @@ img {
     display: flex;
     align-items: center;
     gap: 2px;
-    background: #111;
+    background: var(--mockup-raised);
     border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 2px;
@@ -955,7 +1207,7 @@ img {
 .mockup-tab-group .tab,
 .mockup-time-group .time-btn,
 .mockup-chart-type .chart-btn {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     padding: 3px 8px;
     border-radius: 4px;
     color: var(--color-text-muted);
@@ -969,8 +1221,8 @@ img {
 .mockup-tab-group .tab.active,
 .mockup-time-group .time-btn.active,
 .mockup-chart-type .chart-btn.active {
-    background: var(--color-purple);
-    color: #fff;
+    background: var(--color-cta);
+    color: var(--color-text-inverse);
 }
 
 /* Mock Chart */
@@ -981,13 +1233,23 @@ img {
     overflow: hidden;
 }
 
+/* Axis labels live in HTML so they never clip against the SVG viewBox. */
+.mockup-axis {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0 0 7%;
+    font-size: var(--mockup-text-2xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+}
+
 .chart-svg {
     width: 100%;
     height: 100%;
 }
 
 .chart-label {
-    font-size: 8px;
+    font-size: var(--mockup-text-2xs);
     fill: var(--color-text-muted);
     font-family: var(--font-mono);
 }
@@ -1001,7 +1263,8 @@ img {
 /* Legend */
 .mockup-legend {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid var(--color-border);
@@ -1011,7 +1274,7 @@ img {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
 }
@@ -1031,8 +1294,9 @@ img {
     grid-template-columns: 140px 1fr;
     grid-template-rows: auto 1fr auto;
     min-height: 420px;
-    font-size: 11px;
-    background: #0a0a0a;
+    font-size: var(--mockup-text-sm);
+    background: var(--mockup-surface);
+    text-align: left;
 }
 
 /* Top-left: Logo cell */
@@ -1042,7 +1306,7 @@ img {
     display: flex;
     align-items: center;
     padding: 8px 12px;
-    background: #080808;
+    background: var(--mockup-sunken);
     border-right: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 }
@@ -1052,7 +1316,7 @@ img {
     align-items: center;
     gap: 6px;
     font-weight: 600;
-    font-size: 12px;
+    font-size: var(--mockup-text-md);
     color: var(--color-text-heading);
 }
 
@@ -1064,7 +1328,7 @@ img {
     align-items: center;
     gap: 12px;
     padding: 8px 16px;
-    background: #0c0c0c;
+    background: var(--mockup-surface);
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -1072,9 +1336,9 @@ img {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     color: var(--color-green);
-    background: rgba(16, 185, 129, 0.08);
+    background: var(--tint-green-faint);
     border: 1px solid rgba(16, 185, 129, 0.2);
     border-radius: 6px;
     padding: 4px 10px;
@@ -1085,22 +1349,22 @@ img {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #111;
+    background: var(--mockup-raised);
     border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 4px 10px;
     color: var(--color-text-muted);
-    font-size: 10px;
+    font-size: var(--mockup-text-xs);
 }
 
 .mockup-topbar-search i {
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
 }
 
 .mockup-kbd {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-family: var(--font-mono);
-    background: #1a1a1a;
+    background: var(--mockup-chrome);
     border: 1px solid var(--color-border);
     border-radius: 3px;
     padding: 1px 4px;
@@ -1113,7 +1377,7 @@ img {
     align-items: center;
     gap: 8px;
     color: var(--color-text-muted);
-    font-size: 14px;
+    font-size: var(--mockup-text-lg);
     margin-left: auto;
 }
 
@@ -1121,7 +1385,7 @@ img {
 .mockup-sidebar {
     grid-column: 1;
     grid-row: 2;
-    background: #080808;
+    background: var(--mockup-sunken);
     border-right: 1px solid var(--color-border);
     padding: 12px;
     display: none;
@@ -1150,12 +1414,12 @@ img {
 /* On mobile, single column */
 @media (max-width: 767px) {
     .mockup-dashboard {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
-    .mockup-topbar-cell {
+    .mockup-dashboard .mockup-topbar-cell {
         grid-column: 1;
     }
-    .mockup-main {
+    .mockup-dashboard .mockup-main {
         grid-column: 1;
     }
 }
@@ -1173,7 +1437,7 @@ img {
 }
 
 .mockup-sidebar-label {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-weight: 600;
     color: var(--color-text-muted);
     letter-spacing: 0.08em;
@@ -1192,7 +1456,7 @@ img {
     gap: 8px;
     padding: 6px 8px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     color: var(--color-text-muted);
     cursor: default;
     font-weight: 500;
@@ -1201,11 +1465,11 @@ img {
 
 .mockup-nav-item.active {
     color: var(--color-green);
-    background: rgba(16, 185, 129, 0.08);
+    background: var(--tint-green-faint);
 }
 
 .mockup-nav-item i {
-    font-size: 14px;
+    font-size: var(--mockup-text-lg);
 }
 
 .mockup-nav-dot {
@@ -1234,26 +1498,26 @@ img {
 
 .mockup-stat-row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 20px;
 }
 
 @media (min-width: 640px) {
     .mockup-stat-row {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 
 .mockup-stat-card {
-    background: #080808;
+    background: var(--mockup-sunken);
     border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 12px;
 }
 
 .mockup-stat-label {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-weight: 600;
     color: var(--color-text-muted);
     letter-spacing: 0.05em;
@@ -1264,18 +1528,19 @@ img {
 }
 
 .mockup-stat-label i {
-    font-size: 14px;
+    font-size: var(--mockup-text-lg);
 }
 
 .mockup-stat-value {
-    font-size: 20px;
+    font-size: var(--mockup-text-stat);
     font-weight: 700;
     color: var(--color-text-heading);
     font-family: var(--font-mono);
+    white-space: nowrap;
 }
 
 .mockup-stat-sub {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-weight: 500;
     margin-top: 4px;
 }
@@ -1285,7 +1550,7 @@ img {
 }
 
 .mockup-section-label {
-    font-size: 14px;
+    font-size: var(--mockup-text-lg);
     font-weight: 700;
     color: var(--color-text-heading);
     letter-spacing: 0.05em;
@@ -1297,9 +1562,9 @@ img {
     grid-column: 1 / -1;
     grid-row: 3;
     padding: 4px 12px;
-    background: #080808;
+    background: var(--mockup-sunken);
     border-top: 1px solid var(--color-border);
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
 }
@@ -1311,9 +1576,9 @@ img {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: var(--color-purple);
-    color: #fff;
-    font-size: 10px;
+    background: var(--color-cta);
+    color: var(--color-text-inverse);
+    font-size: var(--mockup-text-xs);
     font-weight: 600;
     padding: 5px 10px;
     border-radius: 6px;
@@ -1321,7 +1586,7 @@ img {
 }
 
 .mockup-btn-create.small {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     padding: 3px 8px;
 }
 
@@ -1329,17 +1594,17 @@ img {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #111;
+    background: var(--mockup-raised);
     border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 6px 10px;
     margin-bottom: 12px;
     color: var(--color-text-muted);
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
 }
 
 .mockup-search-bar i {
-    font-size: 12px;
+    font-size: var(--mockup-text-md);
 }
 
 .mockup-search-text {
@@ -1350,7 +1615,7 @@ img {
 .mockup-topic-name {
     font-family: var(--font-mono);
     font-weight: 600;
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     color: var(--color-text-heading);
     margin-bottom: 4px;
 }
@@ -1366,27 +1631,28 @@ img {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     font-family: var(--font-mono);
     padding: 2px 8px;
     border-radius: 4px;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .mockup-tag.purple {
-    background: rgba(139, 92, 246, 0.15);
-    color: var(--color-purple);
+    background: var(--tint-purple);
+    color: var(--color-purple-tint);
     border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
 .mockup-tag.green {
-    background: rgba(16, 185, 129, 0.15);
+    background: var(--tint-green);
     color: var(--color-green);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .mockup-tag-sep {
-    font-size: 9px;
+    font-size: var(--mockup-text-2xs);
     color: var(--color-text-muted);
 }
 
@@ -1404,7 +1670,7 @@ img {
 .mockup-pref-sidebar {
     width: 110px;
     flex-shrink: 0;
-    background: #080808;
+    background: var(--mockup-sunken);
     padding: 8px;
     display: flex;
     flex-direction: column;
@@ -1415,7 +1681,7 @@ img {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 10px;
+    font-size: var(--mockup-text-xs);
     font-weight: 500;
     color: var(--color-text-muted);
     padding: 6px 8px;
@@ -1430,12 +1696,12 @@ img {
 }
 
 .mockup-pref-item i {
-    font-size: 13px;
+    font-size: var(--mockup-text-lg);
 }
 
 .mockup-pref-content {
     flex: 1;
-    background: #0c0c0c;
+    background: var(--mockup-surface);
     padding: 12px;
     min-width: 0;
 }
@@ -1445,7 +1711,7 @@ img {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     font-weight: 600;
     color: var(--color-text-heading);
     letter-spacing: 0.05em;
@@ -1455,7 +1721,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #080808;
+    background: var(--mockup-sunken);
     border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 8px 12px;
@@ -1469,7 +1735,7 @@ img {
 }
 
 .mockup-cluster-name {
-    font-size: 11px;
+    font-size: var(--mockup-text-sm);
     font-weight: 600;
 }
 
@@ -1482,27 +1748,107 @@ img {
     align-items: center;
     gap: 6px;
     color: var(--color-text-muted);
-    font-size: 12px;
+    font-size: var(--mockup-text-md);
 }
 
 .badge.read-only {
     background-color: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    color: var(--color-critical);
 }
 
 /* =========================================================================
    Animations & Reveals
+   Visible by default. Hiding starts only when script.js has proven it is
+   alive by adding `.reveal-on`; the inline head script's `.js` class is not
+   enough, because a blocked or empty script.js leaves it behind.
    ========================================================================= */
 .reveal {
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.reveal.fade-up {
+.js.reveal-on .reveal {
+    opacity: 0;
+}
+
+.js.reveal-on .reveal.fade-up {
     transform: translateY(30px);
 }
 
-.reveal.active {
+.js.reveal-on .reveal.active {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Belt and braces for engines that report scripting as unavailable. */
+@media (scripting: none) {
+    .js.reveal-on .reveal {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* =========================================================================
+   Responsive rhythm
+   ========================================================================= */
+@media (max-width: 767px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .hero {
+        padding-top: 32px;
+        padding-bottom: 48px;
+    }
+
+    .hero-mockup-wrapper {
+        width: calc(100% - 32px);
+        margin-top: 40px;
+    }
+
+    .why,
+    .features,
+    .quickstart {
+        padding: 56px 0;
+    }
+
+    .features-inner {
+        gap: 64px;
+    }
+
+    .section-header {
+        margin-bottom: 40px;
+    }
+
+    .section-title {
+        font-size: var(--text-5xl);
+    }
+
+    .feature-title {
+        font-size: var(--text-2xl);
+    }
+
+    section[id] {
+        scroll-margin-top: 80px;
+    }
+
+    /* The broker table keeps five columns on narrow screens; PARTITIONS is
+       secondary detail and would force the row wider than the device. */
+    .hero-mockup .mockup-table .col-optional {
+        display: none;
+    }
+
+    .hero-mockup .mockup-table thead th,
+    .hero-mockup .mockup-table tbody td {
+        padding: 4px;
+    }
+
+    .mockup-legend {
+        flex-wrap: wrap;
+        gap: 8px 12px;
+    }
+
+    .mockup-stat-label {
+        letter-spacing: 0;
+    }
 }

@@ -15,6 +15,9 @@ export type Partition = kafka.Partition;
 export type Message = kafka.Message;
 export type ProduceResult = kafka.ProduceResult;
 export type ProduceMessageRequest = kafka.ProduceMessageRequest;
+export type ProduceBatchOptions = kafka.ProduceBatchOptions;
+export type ProduceBatchSummary = kafka.ProduceBatchSummary;
+export type ProduceErrorSample = kafka.ProduceErrorSample;
 export type DeleteRecordsResult = kafka.DeleteRecordsResult;
 export type ClearLagResult = kafka.ClearLagResult;
 export type ConsumerGroup = kafka.ConsumerGroup;
@@ -23,6 +26,22 @@ export type ConsumerGroupMember = kafka.ConsumerGroupMember;
 export type ConsumerGroupOffset = kafka.ConsumerGroupOffset;
 export type ClusterHealth = kafka.ClusterHealth;
 export type TopicConfig = kafka.TopicConfig;
+
+/**
+ * Payload of the backend "produce:batch:progress" event.
+ *
+ * Wails only generates models for bound method signatures, so this event
+ * payload has no generated counterpart. It mirrors kafka.ProduceBatchProgress
+ * in internal/kafka/batch_produce.go field for field.
+ */
+export interface ProduceBatchProgress {
+  opId: string;
+  total: number;
+  sent: number;
+  failed: number;
+  elapsedMs: number;
+  actualTps: number;
+}
 
 // UI filter types shared between MessagesTab and MessagesFilterBar
 export type StartPosition = "Latest" | "Earliest" | "CustomOffset" | "FromDate";
