@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react";
-import { Icon } from "@/components/ui/icon";
 import { Slider } from "@/components/ui/slider";
 import { useSettingsStore } from "@/store/settings";
+import { ACCENT_PRESETS, type AccentPreset } from "@/types/config";
+import { cn } from "@/lib/utils";
+import { SettingsCard, SettingsRow } from "./settings-card";
 import {
   Select,
   SelectContent,
@@ -23,96 +25,135 @@ const SAMPLE_JSON = `{
 }`;
 
 export function AppearanceForm() {
-  const { theme, setTheme, density, setDensity, codeFont, setCodeFont, codeFontSize, setCodeFontSize, resolvedTheme } =
+  const { theme, setTheme, density, setDensity, accent, setAccent, codeFont, setCodeFont, codeFontSize, setCodeFontSize, resolvedTheme } =
     useSettingsStore();
 
   return (
-    <div className="space-y-8">
-      {/* Theme */}
-      <section>
-        <h3 className="flex items-center gap-2 text-sm font-display font-bold text-foreground uppercase tracking-wider mb-4">
-          <Icon name="palette" className="size-4" tone="brand" /> Appearance
-        </h3>
+    <div className="space-y-3">
+      <SettingsCard icon="palette" title="Appearance">
+        <SettingsRow label="Theme">
+          <Select value={theme} onValueChange={(v) => setTheme(v as "dark" | "light" | "system")}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dark">Dark</SelectItem>
+              <SelectItem value="light">Light</SelectItem>
+              <SelectItem value="system">System</SelectItem>
+            </SelectContent>
+          </Select>
+        </SettingsRow>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1.5">Theme</label>
-            <Select value={theme} onValueChange={(v) => setTheme(v as "dark" | "light" | "system")}>
+        <SettingsRow
+          label="UI Density"
+          description="Controls row height and padding in tables"
+        >
+          <Select value={density} onValueChange={(v) => setDensity(v as "compact" | "comfortable" | "spacious")}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="compact">Compact</SelectItem>
+              <SelectItem value="comfortable">Comfortable</SelectItem>
+              <SelectItem value="spacious">Spacious</SelectItem>
+            </SelectContent>
+          </Select>
+        </SettingsRow>
+
+        <SettingsRow
+          label="Accent"
+          description="Primary color for buttons, links and highlights. Status colors (healthy, warning, danger) never change."
+        >
+          <div className="flex flex-col items-end">
+            <Select value={accent} onValueChange={(v) => setAccent(v as AccentPreset)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="system">System</SelectItem>
+                {(Object.keys(ACCENT_PRESETS) as AccentPreset[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="size-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: ACCENT_PRESETS[key].value }}
+                      />
+                      {ACCENT_PRESETS[key].label}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1.5">UI Density</label>
-            <Select value={density} onValueChange={(v) => setDensity(v as "compact" | "comfortable" | "spacious")}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="compact">Compact</SelectItem>
-                <SelectItem value="comfortable">Comfortable</SelectItem>
-                <SelectItem value="spacious">Spacious</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-1">Controls row height and padding in tables</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 max-w-sm">
-            <div>
-              <label className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1.5">Code Font</label>
-              <input
-                type="text"
-                value={codeFont}
-                onChange={(e) => setCodeFont(e.target.value)}
-                className="w-full h-9 px-3 bg-secondary border border-border rounded-lg text-sm text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1.5">Font Size ({codeFontSize}px)</label>
-              <Slider
-                value={[codeFontSize]}
-                onValueChange={([v]) => setCodeFontSize(v)}
-                min={12}
-                max={16}
-                step={1}
-                className="w-full mt-2"
-              />
+            {/* Swatch preview — one tap to switch, no dropdown needed */}
+            <div className="flex items-center gap-2 mt-2">
+              {(Object.keys(ACCENT_PRESETS) as AccentPreset[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-label={`${ACCENT_PRESETS[key].label} accent`}
+                  title={ACCENT_PRESETS[key].label}
+                  onClick={() => setAccent(key)}
+                  className={cn(
+                    "size-6 rounded-full border-2 transition-transform hover:scale-110",
+                    accent === key ? "border-foreground scale-110" : "border-transparent"
+                  )}
+                  style={{ backgroundColor: ACCENT_PRESETS[key].value }}
+                />
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </SettingsRow>
 
-      {/* Preview */}
-      <section>
-        <label className="block text-xs font-mono text-muted-foreground uppercase tracking-wider mb-2">Preview</label>
-        <div className="glass-panel overflow-hidden">
-          <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading preview...</div>}>
-            <MonacoEditor
-              height="180px"
-              language="json"
-              theme={resolvedTheme === "light" ? "vs" : "vs-dark"}
-              value={SAMPLE_JSON}
-              options={{
-                readOnly: true,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                fontSize: codeFontSize,
-                fontFamily: codeFont,
-                lineNumbers: "on",
-                renderLineHighlight: "none",
-                padding: { top: 12 },
-              }}
+        <SettingsRow label="Code Font">
+          <input
+            type="text"
+            value={codeFont}
+            onChange={(e) => setCodeFont(e.target.value)}
+            className="w-48 h-9 px-3 bg-secondary border border-border rounded-lg text-sm text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary/50"
+          />
+        </SettingsRow>
+
+        <SettingsRow label={`Font Size (${codeFontSize}px)`}>
+          <div className="w-48">
+            <Slider
+              value={[codeFontSize]}
+              onValueChange={([v]) => setCodeFontSize(v)}
+              min={12}
+              max={16}
+              step={1}
+              className="w-full"
             />
-          </Suspense>
-        </div>
-      </section>
+            <div className="flex justify-between mt-1 text-[10px] font-mono text-muted-foreground/70">
+              <span>12px</span>
+              <span>16px</span>
+            </div>
+          </div>
+        </SettingsRow>
+      </SettingsCard>
+
+      <SettingsCard icon="code" title="Preview">
+        <SettingsRow>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading preview...</div>}>
+              <MonacoEditor
+                height="180px"
+                language="json"
+                theme={resolvedTheme === "light" ? "vs" : "vs-dark"}
+                value={SAMPLE_JSON}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: codeFontSize,
+                  fontFamily: codeFont,
+                  lineNumbers: "on",
+                  renderLineHighlight: "none",
+                  padding: { top: 12 },
+                }}
+              />
+            </Suspense>
+          </div>
+        </SettingsRow>
+      </SettingsCard>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { CreateTopic } from "@/lib/wails-client";
 import { TemplatePickerDropdown } from "@/components/templates/template-picker-dropdown";
 import type { TopicTemplate } from "@/types/templates";
@@ -248,21 +249,21 @@ export function CreateTopicModal({ isOpen, onClose, cloneFrom }: CreateTopicModa
         </DialogBody>
 
         <DialogFooter>
-          <button
+          <Button
+            variant="outline"
             onClick={handleClose}
             disabled={mutation.isPending}
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={mutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="gap-2"
           >
             {mutation.isPending && <Icon name="loader" className="size-3.5 animate-spin" />}
             {mutation.isPending ? "Creating..." : "Create Topic"}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

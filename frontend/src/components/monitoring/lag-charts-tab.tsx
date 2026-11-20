@@ -23,6 +23,8 @@ import { ChartLineRenderer } from "./chart-line-renderer";
 import { ChartBarRenderer } from "./chart-bar-renderer";
 import { ChartFooterLegend } from "./chart-footer-legend";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { toast } from "sonner";
 import type { TopicLagSummary } from "@/types/lag-alerts";
 import type { TimeWindow, ChartType } from "./chart-entity-types";
@@ -169,9 +171,12 @@ export function LagChartsTab({ onOpenConfig }: LagChartsTabProps) {
   // Empty & loading states
   if (!clusterId || connectionStatus !== "connected") {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 glass-panel text-sm text-muted-foreground">
-        <Icon name="bar-chart" className="size-10" tone="muted" />
-        <p>Connect to a cluster to view time-series lag charts.</p>
+      <div className="glass-panel">
+        <EmptyState
+          icon="bar-chart"
+          title="No cluster connected"
+          description="Connect to a cluster to view time-series lag charts."
+        />
       </div>
     );
   }
@@ -185,13 +190,14 @@ export function LagChartsTab({ onOpenConfig }: LagChartsTabProps) {
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>Loading monitoring configuration…</span>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => loadConfig(clusterId)}
-            className="px-2.5 py-1 rounded border border-border bg-secondary text-foreground hover:bg-accent transition-colors"
           >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -199,25 +205,25 @@ export function LagChartsTab({ onOpenConfig }: LagChartsTabProps) {
 
   if (!recordingEnabled) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 gap-4 glass-panel">
-        <Icon name="bar-chart" className="size-10" tone="muted" />
-        <div className="text-center space-y-1.5 max-w-md">
-          <p className="text-sm font-medium text-foreground">Lag time-series recording is disabled</p>
-          <p className="text-xs text-muted-foreground">
-            Enable <span className="text-foreground font-medium">Enable Monitoring</span> and{" "}
-            <span className="text-foreground font-medium">Record Lag for Charts</span> in Monitoring Configuration to capture live lag trends.
-          </p>
-        </div>
-        {onOpenConfig && (
-          <button
-            type="button"
-            onClick={onOpenConfig}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Icon name="settings" className="size-3.5" />
-            Configure Monitoring
-          </button>
-        )}
+      <div className="glass-panel">
+        <EmptyState
+          icon="bar-chart"
+          title="Lag time-series recording is disabled"
+          description={
+            <>
+              Turn on <span className="text-foreground font-medium">Enable Monitoring</span> and{" "}
+              <span className="text-foreground font-medium">Record Lag for Charts</span> in Monitoring Configuration to capture live lag trends.
+            </>
+          }
+          action={
+            onOpenConfig ? (
+              <Button type="button" size="sm" onClick={onOpenConfig} className="gap-1.5">
+                <Icon name="settings" className="size-3.5" />
+                Configure Monitoring
+              </Button>
+            ) : undefined
+          }
+        />
       </div>
     );
   }

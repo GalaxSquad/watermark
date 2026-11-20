@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Events } from "@wailsio/runtime";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import {
   CancelProduceMessageBatch,
   ProduceMessage,
@@ -432,18 +433,18 @@ export function ProduceMessageModal({ isOpen, onClose, topicName, replaySource, 
         </DialogBody>
 
         <DialogFooter>
-          <button onClick={onClose} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors">
+          <Button variant="outline" onClick={onClose}>
             {isDone ? "Close" : "Cancel"}
-          </button>
+          </Button>
           {!isDone && (
-            <button
+            <Button
               onClick={isBatch ? handleBatchReplay : handleSend}
               disabled={status === "sending" || batchRun.phase === "running" || (!isBatch && !form.value.trim()) || (!isBatch && !!batchValidationError)}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+              className="gap-1.5"
             >
               {(status === "sending" || batchRun.phase === "running") && <Icon name="loader" className="size-3.5 animate-spin" />}
               {sendButtonLabel(isBatch, isReplay, effectiveCount)}
-            </button>
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

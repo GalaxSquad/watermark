@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
 import { GetAllGroupsLagDetail, GetConsumerGroups } from "@/lib/wails-client";
 import { globMatch } from "@/lib/glob-match";
@@ -190,14 +191,16 @@ export function TrackedEntitiesConfig({
             disabled={disabled}
             className="flex-1 px-2 py-1.5 text-xs bg-secondary border border-border rounded text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring font-mono"
           />
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleAdd}
             disabled={disabled || !newPattern.trim()}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary/20 text-primary border border-primary/30 rounded hover:bg-primary/30 transition-colors disabled:opacity-50"
+            className="gap-1 text-xs bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
           >
             <Icon name="plus" className="size-3" tone="brand" />
             Add
-          </button>
+          </Button>
         </div>
 
         {/* Include pattern list */}
@@ -253,14 +256,16 @@ export function TrackedEntitiesConfig({
             disabled={disabled}
             className="flex-1 px-2 py-1.5 text-xs bg-secondary border border-border rounded text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring font-mono"
           />
-          <button
+          <Button
+            variant="destructive"
+            size="sm"
             onClick={handleAddExclude}
             disabled={disabled || !newExcludePattern.trim()}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-semantic-red/20 text-semantic-red border border-semantic-red/30 rounded hover:bg-semantic-red/30 transition-colors disabled:opacity-50"
+            className="gap-1 text-xs"
           >
-            <Icon name="plus" className="size-3" tone="danger" />
+            <Icon name="plus" className="size-3" />
             Exclude
-          </button>
+          </Button>
         </div>
 
         {activeExcludePatterns.length === 0 ? (

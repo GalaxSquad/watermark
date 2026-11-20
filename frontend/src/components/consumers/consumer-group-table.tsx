@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
+import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CopyableText } from "@/components/shared/copyable-text";
 import { Icon } from "@/components/ui/icon";
@@ -30,13 +31,32 @@ const STATE_MAP: Record<ConsumerGroupState, "healthy" | "rebalancing" | "dead" |
 interface ConsumerGroupTableProps {
   onGroupClick: (groupId: string) => void;
   searchFilter: string;
+  /** Filter by group state ("all" = no state filter) */
+  stateFilter?: ConsumerGroupState | "all";
+  /** Hide Empty groups (the dominant noise on clusters with hundreds of anonymous groups) */
+  hideEmpty?: boolean;
 }
 
-export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroupTableProps) {
+export function ConsumerGroupTable({ onGroupClick, searchFilter, stateFilter = "all", hideEmpty = false }: ConsumerGroupTableProps) {
   const { data: groups = [], isLoading } = useKafkaQuery(["consumer-groups"], GetConsumerGroups);
   const { alerts } = useLagAlertsStore();
   const isReadOnly = useReadOnly();
   const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
+
+  const filteredGroups = useMemo(() => {
+    return groups.filter((g) => {
+      if (stateFilter !== "all" && g.state !== stateFilter) return false;
+      if (hideEmpty && g.state === "Empty") return false;
+      return true;
+    });
+  }, [groups, stateFilter, hideEmpty]);
+
+  // The ALERT column only exists while at least one alert is firing —
+  // otherwise it is a dead column of "–" on every row.
+  const hasActiveAlerts = useMemo(
+    () => alerts.some((a) => !a.resolved),
+    [alerts]
+  );
 
   const columns = useMemo<ColumnDef<ConsumerGroup, unknown>[]>(() => [
     {
@@ -63,6 +83,7 @@ export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroup
     {
       accessorKey: "members",
       header: "Members",
+      meta: { align: "right" },
       cell: ({ row }) => (
         <span className="font-mono text-muted-foreground">{row.original.members}</span>
       ),
@@ -82,6 +103,7 @@ export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroup
           </TooltipContent>
         </Tooltip>
       ),
+      meta: { align: "right" },
       cell: ({ row }) => {
         const { totalLag, state } = row.original;
         const isInactive = state === "Empty" || state === "Dead";
@@ -122,33 +144,37 @@ export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroup
         );
       },
     },
-    {
-      id: "alert",
-      header: () => (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex items-center gap-1 cursor-help">
-              Alert
-              <Icon name="info" tone="muted" className="size-3" />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs text-xs font-sans normal-case tracking-normal">
-            Shows active warning/critical breaches from rules configured in Monitoring → Configuration.
-          </TooltipContent>
-        </Tooltip>
-      ),
-      cell: ({ row }) => {
-        const hasAlert = alerts.some(
-          (a) => a.groupId === row.original.groupId && !a.resolved,
-        );
-        return hasAlert ? (
-          <AlertIndicator groupId={row.original.groupId} alerts={alerts} />
-        ) : (
-          <span className="text-xs text-muted-foreground/50 font-mono">—</span>
-        );
-      },
-    },
-  ], [alerts]);
+    ...(hasActiveAlerts
+      ? [
+          {
+            id: "alert",
+            header: () => (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 cursor-help">
+                    Alert
+                    <Icon name="info" tone="muted" className="size-3" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-xs font-sans normal-case tracking-normal">
+                  Shows active warning/critical breaches from rules configured in Monitoring → Configuration.
+                </TooltipContent>
+              </Tooltip>
+            ),
+            cell: ({ row }: { row: { original: ConsumerGroup } }) => {
+              const hasAlert = alerts.some(
+                (a) => a.groupId === row.original.groupId && !a.resolved,
+              );
+              return hasAlert ? (
+                <AlertIndicator groupId={row.original.groupId} alerts={alerts} />
+              ) : (
+                <span className="text-xs text-muted-foreground/50 font-mono">—</span>
+              );
+            },
+          } as ColumnDef<ConsumerGroup, unknown>,
+        ]
+      : []),
+  ], [alerts, hasActiveAlerts]);
 
   const getRowContextMenu = (group: ConsumerGroup): RowContextMenuItem[] => {
     const items: RowContextMenuItem[] = [
@@ -181,12 +207,21 @@ export function ConsumerGroupTable({ onGroupClick, searchFilter }: ConsumerGroup
   return (
     <>
       <DataTable
-        data={groups}
+        data={filteredGroups}
         columns={columns}
         isLoading={isLoading}
         onRowClick={(row) => onGroupClick(row.groupId)}
         globalFilter={searchFilter}
         getRowContextMenu={getRowContextMenu}
+        emptyState={
+          groups.length > 0 ? (
+            <EmptyState
+              icon="users"
+              title="No groups match these filters"
+              description="Try a different state filter or clear the search."
+            />
+          ) : undefined
+        }
       />
       <ClearLagDialog
         target={clearTarget}

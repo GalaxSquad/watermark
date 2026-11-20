@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { Events } from "@wailsio/runtime";
 import { toast } from "sonner";
-import type { ThemeMode, UIDensity } from "@/types/config";
+import { ACCENT_PRESETS, type AccentPreset, type ThemeMode, type UIDensity } from "@/types/config";
 import {
   Connect,
   Disconnect,
@@ -42,6 +42,10 @@ interface SettingsState {
   /* UI Density */
   density: UIDensity;
   setDensity: (density: UIDensity) => void;
+
+  /* Accent preset */
+  accent: AccentPreset;
+  setAccent: (accent: AccentPreset) => void;
 
   /* Active Cluster & Warm Pool */
   activeClusterId: string | null;
@@ -125,6 +129,33 @@ export function initTheme() {
   return { saved, resolved };
 }
 
+const ACCENT_STORAGE_KEY = "watermark-accent";
+
+/** Accent presets mirror the theme pattern: a data attribute on <html>
+ *  (CSS var overrides live in style.css) + localStorage persistence.
+ *  Violet is the default and needs no override block — the :root tokens
+ *  already are violet. */
+function applyAccent(accent: AccentPreset) {
+  document.documentElement.dataset.accent = accent;
+  localStorage.setItem(ACCENT_STORAGE_KEY, accent);
+}
+
+function readStoredAccent(): AccentPreset {
+  const saved = localStorage.getItem(ACCENT_STORAGE_KEY);
+  return saved !== null && saved in ACCENT_PRESETS ? (saved as AccentPreset) : "violet";
+}
+
+export function initAccent() {
+  applyAccent(readStoredAccent());
+}
+
+const DENSITY_STORAGE_KEY = "watermark-density";
+
+function readStoredDensity(): UIDensity {
+  const saved = localStorage.getItem(DENSITY_STORAGE_KEY);
+  return saved === "compact" || saved === "spacious" ? saved : "comfortable";
+}
+
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   theme: (localStorage.getItem("watermark-theme") as ThemeMode) || "dark",
   resolvedTheme: resolveTheme((localStorage.getItem("watermark-theme") as ThemeMode) || "dark"),
@@ -136,8 +167,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ theme, resolvedTheme: resolved });
   },
 
-  density: "comfortable",
-  setDensity: (density) => set({ density }),
+  density: readStoredDensity(),
+  setDensity: (density) => {
+    localStorage.setItem(DENSITY_STORAGE_KEY, density);
+    set({ density });
+  },
+
+  accent: readStoredAccent(),
+  setAccent: (accent) => {
+    applyAccent(accent);
+    set({ accent });
+  },
 
   activeClusterId: null,
   pooledClusterIds: [],

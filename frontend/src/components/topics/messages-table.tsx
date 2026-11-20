@@ -1,7 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useDensity } from "@/hooks/use-density";
 import { cn, formatLocalTimestamp } from "@/lib/utils";
 import type { Message } from "@/types/kafka";
 import { MessageContextMenu } from "./message-context-menu";
@@ -39,6 +47,7 @@ export function MessagesTable({
 }: MessagesTableProps) {
   const [pageSize, setPageSize] = useState(50);
   const [currentPage, setCurrentPage] = useState(0);
+  const { rowHeight, cellPadding } = useDensity();
 
   const totalPages = Math.max(1, Math.ceil(messages.length / pageSize));
 
@@ -94,7 +103,7 @@ export function MessagesTable({
           <thead>
             <tr className="bg-secondary">
               {selectMode && (
-                <th className="px-3 py-3 w-8">
+                <th className={cn("px-3 w-8", cellPadding)}>
                   <Checkbox
                     checked={paginatedMessages.length > 0 && paginatedMessages.every(m => selectedIds?.has(`${m.partition}-${m.offset}`))}
                     onCheckedChange={() => onToggleAll?.(paginatedMessages)}
@@ -102,35 +111,33 @@ export function MessagesTable({
                   />
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">P</th>
-              <th className="px-4 py-3 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Offset</th>
-              <th className="px-4 py-3 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Timestamp</th>
-              <th className="px-4 py-3 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Key</th>
-              <th className="px-4 py-3 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">Value</th>
+              <th className={cn("px-4 text-right text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums", cellPadding)}>P</th>
+              <th className={cn("px-4 text-right text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider tabular-nums", cellPadding)}>Offset</th>
+              <th className={cn("px-4 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider", cellPadding)}>Timestamp</th>
+              <th className={cn("px-4 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider", cellPadding)}>Key</th>
+              <th className={cn("px-4 text-left text-[10px] font-mono font-semibold text-muted-foreground uppercase tracking-wider", cellPadding)}>Value</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, rIdx) => (
-                <tr key={`msg-skeleton-${rIdx}`}>
-                  {selectMode && <td className="px-3 py-3 w-8"><Skeleton className="size-4" /></td>}
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-6" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-48" /></td>
+                <tr key={`msg-skeleton-${rIdx}`} style={{ height: rowHeight }}>
+                  {selectMode && <td className={cn("px-3 w-8", cellPadding)}><Skeleton className="size-4" /></td>}
+                  <td className={cn("px-4", cellPadding)}><Skeleton className="h-4 w-6" /></td>
+                  <td className={cn("px-4", cellPadding)}><Skeleton className="h-4 w-16" /></td>
+                  <td className={cn("px-4", cellPadding)}><Skeleton className="h-4 w-32" /></td>
+                  <td className={cn("px-4", cellPadding)}><Skeleton className="h-4 w-20" /></td>
+                  <td className={cn("px-4", cellPadding)}><Skeleton className="h-4 w-48" /></td>
                 </tr>
               ))
             ) : paginatedMessages.length === 0 ? (
               <tr>
-                <td colSpan={selectMode ? 6 : 5} className="px-4 py-12 text-center text-sm text-muted-foreground font-sans">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Icon name="layers" tone="muted" className="size-8 opacity-40" />
-                    <span className="font-medium">No messages found</span>
-                    <span className="text-xs text-muted-foreground/70">
-                      Click Refresh to fetch latest records from the topic.
-                    </span>
-                  </div>
+                <td colSpan={selectMode ? 6 : 5} className="px-4 py-0">
+                  <EmptyState
+                    icon="layers"
+                    title="No messages found"
+                    description="Click Refresh to fetch latest records from the topic."
+                  />
                 </td>
               </tr>
             ) : (
@@ -148,6 +155,7 @@ export function MessagesTable({
                   >
                     <tr
                       onClick={() => selectMode ? onToggleSelect?.(msg) : onSelectMessage(msg)}
+                      style={{ height: rowHeight }}
                       className={cn(
                         "cursor-pointer transition-colors duration-150",
                         !selectMode && selectedMessage?.partition === msg.partition && selectedMessage?.offset === msg.offset
@@ -158,7 +166,7 @@ export function MessagesTable({
                       )}
                     >
                       {selectMode && (
-                        <td className="px-3 py-3 w-8">
+                        <td className={cn("px-3 w-8", cellPadding)}>
                           <Checkbox
                             checked={isChecked}
                             onCheckedChange={() => onToggleSelect?.(msg)}
@@ -167,11 +175,11 @@ export function MessagesTable({
                           />
                         </td>
                       )}
-                      <td className="px-4 py-3 text-sm font-mono tabular-nums text-foreground">{msg.partition}</td>
-                      <td className="px-4 py-3 text-sm font-mono tabular-nums text-foreground">{msg.offset}</td>
-                      <td className="px-4 py-3 text-sm font-mono tabular-nums text-muted-foreground">{formatLocalTimestamp(msg.timestamp)}</td>
-                      <td className="px-4 py-3 text-sm font-mono text-semantic-purple">{msg.key}</td>
-                      <td className="px-4 py-3 text-sm font-mono text-semantic-cyan truncate max-w-xs">{msg.value}</td>
+                      <td className={cn("px-4 text-sm font-mono tabular-nums text-foreground text-right", cellPadding)}>{msg.partition}</td>
+                      <td className={cn("px-4 text-sm font-mono tabular-nums text-foreground text-right", cellPadding)}>{msg.offset}</td>
+                      <td className={cn("px-4 text-sm font-mono tabular-nums text-muted-foreground", cellPadding)}>{formatLocalTimestamp(msg.timestamp)}</td>
+                      <td className={cn("px-4 text-sm font-mono text-semantic-purple", cellPadding)}>{msg.key}</td>
+                      <td className={cn("px-4 text-sm font-mono text-semantic-cyan truncate max-w-xs", cellPadding)}>{msg.value}</td>
                     </tr>
                   </MessageContextMenu>
                 );
@@ -213,41 +221,35 @@ export function MessagesTable({
           </span>
           {totalPages > 1 && (
             <div className="flex items-center gap-0.5">
-              <button
-                onClick={() => setCurrentPage(0)}
-                disabled={safePage === 0}
-                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                title="First page"
-              >
-                <Icon name="chevrons-left" className="size-3.5" />
-              </button>
-              <button
-                onClick={() => setCurrentPage(safePage - 1)}
-                disabled={safePage === 0}
-                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Previous page"
-              >
-                <Icon name="chevron-left" className="size-3.5" />
-              </button>
+              {([
+                { label: "First page", icon: "chevrons-left" as const, onClick: () => setCurrentPage(0), disabled: safePage === 0 },
+                { label: "Previous page", icon: "chevron-left" as const, onClick: () => setCurrentPage(safePage - 1), disabled: safePage === 0 },
+              ]).map((b) => (
+                <Tooltip key={b.label}>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon-xs" onClick={b.onClick} disabled={b.disabled} aria-label={b.label}>
+                      <Icon name={b.icon} className="size-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">{b.label}</TooltipContent>
+                </Tooltip>
+              ))}
               <span className="px-2 text-xs font-mono tabular-nums text-muted-foreground">
                 {safePage + 1} / {totalPages}
               </span>
-              <button
-                onClick={() => setCurrentPage(safePage + 1)}
-                disabled={safePage >= totalPages - 1}
-                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Next page"
-              >
-                <Icon name="chevron-right" className="size-3.5" />
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages - 1)}
-                disabled={safePage >= totalPages - 1}
-                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Last page"
-              >
-                <Icon name="chevrons-right" className="size-3.5" />
-              </button>
+              {([
+                { label: "Next page", icon: "chevron-right" as const, onClick: () => setCurrentPage(safePage + 1), disabled: safePage >= totalPages - 1 },
+                { label: "Last page", icon: "chevrons-right" as const, onClick: () => setCurrentPage(totalPages - 1), disabled: safePage >= totalPages - 1 },
+              ]).map((b) => (
+                <Tooltip key={b.label}>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon-xs" onClick={b.onClick} disabled={b.disabled} aria-label={b.label}>
+                      <Icon name={b.icon} className="size-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">{b.label}</TooltipContent>
+                </Tooltip>
+              ))}
             </div>
           )}
         </div>

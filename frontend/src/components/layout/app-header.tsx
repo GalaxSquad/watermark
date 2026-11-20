@@ -4,6 +4,7 @@ import { useSearchPaletteStore } from "@/store/search-palette";
 import { ClusterDropdown } from "./cluster-dropdown";
 import { SearchCommandPalette } from "@/components/shared/search-command-palette";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipTrigger,
@@ -36,30 +37,32 @@ export function AppHeader() {
         <div className="flex items-center gap-4">
           <ClusterDropdown />
 
-          <button
+          <Button
+            variant="outline"
             onClick={toggleSearch}
-            className="h-8 flex items-center gap-2 px-3 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground hover:border-ring transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98]"
+            className="h-8 gap-2 px-3 text-muted-foreground hover:text-foreground"
           >
             <Icon name="search" className="size-3.5" />
             <span className="text-xs">Search...</span>
             <kbd className="ml-3 text-[10px] bg-secondary/80 px-1.5 py-0.5 rounded border border-border font-mono">
               {isMac ? "⌘K" : "Ctrl+K"}
             </kbd>
-          </button>
+          </Button>
         </div>
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 onClick={() => setTheme(isDark ? "light" : "dark")}
-                className="size-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-[color,background-color,transform] duration-150 active:scale-90"
               >
                 {isDark ? <Icon name="sun" className="size-4" /> : <Icon name="moon" className="size-4" />}
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               {isDark ? "Switch to light mode" : "Switch to dark mode"}
@@ -68,15 +71,16 @@ export function AppHeader() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <Button
                 id="settings-trigger"
                 type="button"
+                variant="ghost"
+                size="icon"
                 aria-label={`Settings (${isMac ? "⌘," : "Ctrl+,"})`}
                 onClick={openSettings}
-                className="size-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg hover:bg-secondary transition-[color,background-color,transform] duration-150 active:scale-90"
               >
                 <Icon name="settings" className="size-4" />
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               Settings ({isMac ? "⌘," : "Ctrl+,"})

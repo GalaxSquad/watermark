@@ -3,6 +3,7 @@ import { useParams, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { GroupDetailHeader } from "@/components/consumers/group-detail-header";
 import { ActiveMembersTable } from "@/components/consumers/active-members-table";
 import { OffsetsLagTable } from "@/components/consumers/offsets-lag-table";
@@ -69,13 +70,15 @@ export function ConsumerDetailPage() {
 
   return (
     <div className="space-y-6">
-      <button
+      <Button
+        variant="link"
+        size="sm"
         onClick={() => router.history.back()}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="h-auto p-0 gap-1 text-sm text-muted-foreground hover:no-underline"
       >
         <Icon name="chevron-left" className="size-4" />
         Consumer Groups
-      </button>
+      </Button>
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div className="space-y-1.5 min-w-0 flex-1">
           <span className="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider block">

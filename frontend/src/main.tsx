@@ -4,12 +4,13 @@ import { RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { router } from "./router";
-import { initTheme } from "@/store/settings";
+import { initTheme, initAccent } from "@/store/settings";
 import "@fontsource-variable/geist";
 import "./style.css";
 
-// Initialize theme from localStorage before rendering
+// Initialize theme + accent preset from localStorage before rendering
 initTheme();
+initAccent();
 
 const queryClient = new QueryClient({
   defaultOptions: {

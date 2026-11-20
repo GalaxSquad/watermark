@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAnnotations } from "@/hooks/use-annotations";
+import { Button } from "@/components/ui/button";
 import { ServiceNameInput } from "./service-name-input";
 import * as annotations from "../../../bindings/watermark-01/internal/annotations/models";
 import {
@@ -150,29 +151,24 @@ export function AnnotationEditorModal({
         <DialogFooter className="justify-between">
           <div>
             {hasAnnotation && (
-              <button
+              <Button
+                variant="link"
+                size="sm"
                 onClick={handleDelete}
-                className="px-3 py-1.5 text-xs text-semantic-red hover:text-semantic-red/80 transition-colors"
                 disabled={isSaving}
+                className="h-auto p-0 text-xs text-semantic-red hover:text-semantic-red/80"
               >
                 Remove Annotations
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-muted-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors"
-            >
+            <Button variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
-            >
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Saving..." : "Save"}
-            </button>
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

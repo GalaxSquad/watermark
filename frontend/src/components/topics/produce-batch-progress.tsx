@@ -1,4 +1,5 @@
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import type { ProduceBatchSummary } from "@/types/kafka";
@@ -78,15 +79,17 @@ export function ProduceBatchProgressPanel({
               {completed}/{counters.total}
             </span>
             {isRunning ? (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="xs"
                 onClick={onCancel}
                 disabled={isCancelling}
-                className="flex items-center gap-1 px-2 py-0.5 text-xs font-mono text-muted-foreground hover:text-foreground bg-secondary border border-border rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="gap-1 font-mono text-xs"
               >
                 <Icon name="x-circle" className="size-3" tone="danger" />
                 {isCancelling ? "Cancelling..." : "Cancel batch"}
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>

@@ -32,6 +32,7 @@ export function SubjectList({ selectedSubject, onSelect }: SubjectListProps) {
           value={search}
           onChange={setSearch}
           placeholder="Filter..."
+          disabled={subjects.length === 0}
         />
       </div>
 

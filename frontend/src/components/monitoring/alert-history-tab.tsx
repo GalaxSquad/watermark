@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useLagAlertsStore } from "@/store/lag-alerts";
 import { useSettingsStore } from "@/store/settings";
 import { cn } from "@/lib/utils";
@@ -66,18 +68,22 @@ export function AlertHistoryTab() {
         <div className="flex gap-2">
           {alerts.length > 0 && activeClusterId && (
             <>
-              <button
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => markAllRead(activeClusterId)}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="h-auto p-0 text-xs text-muted-foreground"
               >
                 Mark all read
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => clearAll(activeClusterId)}
-                className="text-xs text-semantic-red hover:text-red-300 transition-colors"
+                className="h-auto p-0 text-xs text-semantic-red hover:text-red-300"
               >
                 Clear all
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -85,11 +91,16 @@ export function AlertHistoryTab() {
 
       {/* Alert list */}
       {filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          {filter === "all"
-            ? "No alerts yet. Configure rules in the Config tab."
-            : `No ${filter} alerts.`}
-        </div>
+        <EmptyState
+          compact
+          icon="bell"
+          title={filter === "all" ? "No alerts yet" : "No unread alerts"}
+          description={
+            filter === "all"
+              ? "Nothing has breached a rule yet. Configure rules in Monitoring Configuration to start alerting."
+              : "Every alert has been read."
+          }
+        />
       ) : (
         <div className="glass-panel overflow-hidden">
           {Object.entries(grouped).map(([pattern, groupAlerts]) => (

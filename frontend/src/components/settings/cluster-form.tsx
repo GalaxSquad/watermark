@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { SaveCluster, TestConnection, GetCluster, UpdateReadOnly, DisconnectCluster } from "@/lib/wails-client";
 import * as config from "../../../bindings/watermark-01/internal/config/models";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { ClusterFormFields } from "./cluster-form-fields";
+import { SettingsCard, SettingsRow } from "./settings-card";
 import { useSettingsStore } from "@/store/settings";
 
 // Back-end connection test statuses returned by the Go service.
@@ -175,79 +177,82 @@ export function ClusterForm({ clusterId, clusterName, onClose }: ClusterFormProp
   const handleFormChange = (updates: Partial<typeof form>) => setForm({ ...form, ...updates });
 
   return (
-    <div className="glass-panel p-5 space-y-4">
-      <h4 className="text-sm font-display font-bold text-foreground uppercase tracking-wider">
-        {isNew ? <span className="flex items-center gap-1.5"><Icon name="sparkles" className="size-3.5" tone="brand" />New Cluster</span> : `Edit Cluster: ${form.name}`}
-      </h4>
+    <SettingsCard
+      icon={isNew ? "sparkles" : "server"}
+      title={isNew ? "New Cluster" : `Edit Cluster: ${form.name}`}
+    >
+      <SettingsRow className="py-4">
+        <div className="space-y-4">
+          <ClusterFormFields
+            form={form}
+            onChange={handleFormChange}
+            clusterId={clusterId}
+            isNew={isNew}
+          />
 
-      <ClusterFormFields
-        form={form}
-        onChange={handleFormChange}
-        clusterId={clusterId}
-        isNew={isNew}
-      />
-
-      {/* Test Connection feedback — 4-status visual */}
-      {testStatus !== "idle" && (
-        <div
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono",
-            testStatus === "testing" && "bg-primary/10 text-primary",
-            testStatus === "ok" && "bg-status-healthy/10 text-status-healthy",
-            testStatus === "auth_error" && "bg-orange-500/10 text-orange-400",
-            testStatus === "forbidden" && "bg-amber-500/10 text-amber-400",
-            testStatus === "unreachable" && "bg-semantic-red/10 text-semantic-red",
+          {/* Test Connection feedback — 4-status visual */}
+          {testStatus !== "idle" && (
+            <div
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono",
+                testStatus === "testing" && "bg-primary/10 text-primary",
+                testStatus === "ok" && "bg-status-healthy/10 text-status-healthy",
+                testStatus === "auth_error" && "bg-orange-500/10 text-orange-400",
+                testStatus === "forbidden" && "bg-amber-500/10 text-amber-400",
+                testStatus === "unreachable" && "bg-semantic-red/10 text-semantic-red",
+              )}
+            >
+              {testStatus === "testing" && <Icon name="loader" className="size-3.5 animate-spin" tone="brand" />}
+              {testStatus === "ok" && <Icon name="check-circle" className="size-3.5" tone="success" />}
+              {testStatus === "auth_error" && <Icon name="shield-x" className="size-3.5" tone="warning" />}
+              {testStatus === "forbidden" && <Icon name="shield-alert" className="size-3.5" tone="warning" />}
+              {testStatus === "unreachable" && <Icon name="x-circle" className="size-3.5" tone="danger" />}
+              <span>{testStatus === "testing" ? "Testing connection..." : testMessage}</span>
+            </div>
           )}
-        >
-          {testStatus === "testing" && <Icon name="loader" className="size-3.5 animate-spin" tone="brand" />}
-          {testStatus === "ok" && <Icon name="check-circle" className="size-3.5" tone="success" />}
-          {testStatus === "auth_error" && <Icon name="shield-x" className="size-3.5" tone="warning" />}
-          {testStatus === "forbidden" && <Icon name="shield-alert" className="size-3.5" tone="warning" />}
-          {testStatus === "unreachable" && <Icon name="x-circle" className="size-3.5" tone="danger" />}
-          <span>{testStatus === "testing" ? "Testing connection..." : testMessage}</span>
-        </div>
-      )}
 
-      {/* Save error */}
-      {saveError && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono bg-semantic-red/10 text-semantic-red">
-          <Icon name="x-circle" className="size-3.5" tone="danger" />
-          <span>{saveError}</span>
+          {/* Save error */}
+          {saveError && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono bg-semantic-red/10 text-semantic-red">
+              <Icon name="x-circle" className="size-3.5" tone="danger" />
+              <span>{saveError}</span>
+            </div>
+          )}
         </div>
-      )}
+      </SettingsRow>
 
       {/* Action buttons */}
-      <div className="flex justify-between items-center pt-4 border-t border-border">
-        <button
-          onClick={handleTestConnection}
-          disabled={testStatus === "testing"}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm text-muted-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {testStatus === "testing" ? (
-            <Icon name="loader" className="size-3.5 animate-spin" tone="brand" />
-          ) : (
-            <Icon name="zap" className="size-3.5" tone="warning" />
-          )}
-          Test Connection
-        </button>
+      <SettingsRow>
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            variant="outline"
+            onClick={handleTestConnection}
+            disabled={testStatus === "testing"}
+            className="gap-1.5"
+          >
+            {testStatus === "testing" ? (
+              <Icon name="loader" className="size-3.5 animate-spin" tone="brand" />
+            ) : (
+              <Icon name="zap" className="size-3.5" tone="warning" />
+            )}
+            Test Connection
+          </Button>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-muted-foreground bg-secondary rounded-lg border border-border hover:bg-accent transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {saving && <Icon name="loader" className="size-3.5 animate-spin" />}
-            {isNew ? "Create" : "Save"}
-          </button>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="gap-1.5"
+            >
+              {saving && <Icon name="loader" className="size-3.5 animate-spin" />}
+              {isNew ? "Create" : "Save"}
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+      </SettingsRow>
+    </SettingsCard>
   );
 }

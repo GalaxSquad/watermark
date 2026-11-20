@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { useAnnotations } from "@/hooks/use-annotations";
 import { ExportToFile, ExportAllToFile, ImportFromFile } from "@/lib/wails-client";
 import { useSettingsStore } from "@/store/settings";
@@ -81,21 +82,25 @@ export function ExportImportSection() {
 
       {/* Export buttons */}
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleExportCurrent}
           disabled={!clusterId}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-secondary border border-border rounded-lg hover:bg-accent transition-colors disabled:opacity-40"
+          className="gap-1.5 text-xs"
         >
           <Icon name="download" className="size-3.5" />
           Export Current Cluster
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleExportAll}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-secondary border border-border rounded-lg hover:bg-accent transition-colors"
+          className="gap-1.5 text-xs"
         >
           <Icon name="download" className="size-3.5" />
           Export All Clusters
-        </button>
+        </Button>
       </div>
 
       <div className="border-t border-border pt-4" />
@@ -125,13 +130,15 @@ export function ExportImportSection() {
           </label>
         </div>
 
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleImport}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground bg-secondary border border-border rounded-lg hover:bg-accent transition-colors"
+          className="gap-1.5 text-xs"
         >
           <Icon name="upload" className="size-3.5" />
           Import from File
-        </button>
+        </Button>
       </div>
 
       {/* Status messages */}

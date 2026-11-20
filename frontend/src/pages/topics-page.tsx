@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/shared/search-input";
 import { RefreshButton } from "@/components/shared/refresh-button";
+import { PageHeader } from "@/components/shared/page-header";
 import { TopicListTable } from "@/components/topics/topic-list-table";
 import { CreateTopicModal } from "@/components/topics/create-topic-modal";
 import { GetTopic, GetTopicConfigs } from "@/lib/wails-client";
@@ -14,7 +15,9 @@ import { useReadOnly } from "@/hooks/use-read-only";
 export function TopicsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [hideInternal, setHideInternal] = useState(false);
+  // Internal topics (__consumer_offsets, …) are hidden by default —
+  // most users open this page to find their own topics.
+  const [hideInternal, setHideInternal] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const isReadOnly = useReadOnly();
   const [cloneSource, setCloneSource] = useState<{
@@ -61,21 +64,21 @@ export function TopicsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold uppercase tracking-wider min-w-0">
-          Topics
-        </h1>
-        {!isReadOnly && (
-          <Button
-            onClick={() => setCreateOpen(true)}
-            size="sm"
-            className="gap-1.5 shrink-0"
-          >
-            <Icon name="plus" className="size-3.5" />
-            Create Topic
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Topics"
+        actions={
+          !isReadOnly ? (
+            <Button
+              onClick={() => setCreateOpen(true)}
+              size="sm"
+              className="gap-1.5 shrink-0"
+            >
+              <Icon name="plus" className="size-3.5" />
+              Create Topic
+            </Button>
+          ) : undefined
+        }
+      />
 
       <div className="flex items-center gap-4">
         <SearchInput

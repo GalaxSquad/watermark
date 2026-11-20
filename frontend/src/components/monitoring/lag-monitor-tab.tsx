@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useKafkaQuery } from "@/hooks/use-kafka-query";
 import { useReadOnly } from "@/hooks/use-read-only";
 import { GetConsumerGroups } from "@/lib/wails-client";
@@ -50,6 +52,7 @@ export function LagMonitorTab() {
   const clusterId = useSettingsStore((s) => s.activeClusterId);
   const { config, updateConfig } = useGroupLagConfig(clusterId);
   const [showFilters, setShowFilters] = useState(false);
+  const [showStale, setShowStale] = useState(false);
   const [clearTarget, setClearTarget] = useState<ClearLagTarget | null>(null);
   const isReadOnly = useReadOnly();
 
@@ -59,12 +62,24 @@ export function LagMonitorTab() {
     { refetchInterval: false },
   );
 
-  const filtered = useMemo(() => {
-    if (!groups) return [];
-    return groups
+  // Main ranking shows ACTIVE groups only. Empty/Dead groups carry retained
+  // offset backlog that never decreases — ranking them by lag used to fill
+  // the whole top 5 with identical stale numbers. Stale groups are one
+  // toggle away instead of dominating the default view.
+  const { activeFiltered, staleFiltered, staleCount } = useMemo(() => {
+    if (!groups) return { activeFiltered: [], staleFiltered: [], staleCount: 0 };
+    const active = groups
+      .filter((g) => g.state !== "Empty" && g.state !== "Dead")
       .filter((g) => shouldShowGroup(g.groupId, g.totalLag, config))
       .sort((a, b) => b.totalLag - a.totalLag);
+    const stale = groups
+      .filter((g) => g.state === "Empty" || g.state === "Dead")
+      .filter((g) => shouldShowGroup(g.groupId, g.totalLag, config))
+      .sort((a, b) => b.totalLag - a.totalLag);
+    return { activeFiltered: active, staleFiltered: stale, staleCount: stale.length };
   }, [groups, config]);
+
+  const filtered = showStale ? staleFiltered : activeFiltered;
 
   return (
     <div className="flex flex-col gap-3 h-[256px] min-w-0">
@@ -73,32 +88,66 @@ export function LagMonitorTab() {
           <Icon name="activity" className="size-4" tone="success" />
           Consumer Lag Ranking
         </h2>
-        <Popover open={showFilters} onOpenChange={setShowFilters}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 text-muted-foreground hover:text-foreground rounded border border-transparent hover:border-border hover:bg-secondary transition-colors duration-150 outline-none active:scale-[0.98]",
-                showFilters && "bg-secondary border-border text-foreground"
-              )}
-            >
-              <Icon name="filter" className="size-3" />
-              Filter Config
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-[400px] p-0 border-border bg-[#0c0c0c]">
-            <RankingConfigPanel config={config} onUpdate={updateConfig} />
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-1.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant={showStale ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setShowStale((s) => !s)}
+                className="h-7 text-xs gap-1.5"
+              >
+                <Icon name="clock" className="size-3" />
+                Stale backlog{staleCount > 0 ? ` (${staleCount})` : ""}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs text-xs font-sans normal-case tracking-normal">
+              {showStale
+                ? "Showing retained backlog from Empty/Dead groups. Switch back to active groups."
+                : "Show retained offset backlog from Empty/Dead groups instead of the active ranking."}
+            </TooltipContent>
+          </Tooltip>
+          <Popover open={showFilters} onOpenChange={setShowFilters}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn("h-7 text-xs gap-1.5", showFilters && "bg-secondary text-foreground")}
+              >
+                <Icon name="filter" className="size-3" />
+                Filter Config
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[400px] p-0 border-border bg-[#0c0c0c]">
+              <RankingConfigPanel config={config} onUpdate={updateConfig} />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {!groups ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm glass-panel py-8">
-          Connect to a cluster to view consumer group lag.
+        <div className="glass-panel flex-1 flex items-center justify-center">
+          <EmptyState
+            compact
+            icon="activity"
+            title="No cluster connected"
+            description="Connect to a cluster to view consumer group lag."
+          />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm glass-panel py-8">
-          No consumer groups match current filters.
+        <div className="glass-panel flex-1 flex items-center justify-center">
+          <EmptyState
+            compact
+            icon="activity"
+            title={showStale ? "No stale backlog" : "No active groups match"}
+            description={
+              showStale
+                ? "No Empty/Dead groups match the current filters."
+                : "No active consumer groups match the current filters. Inactive groups live under Stale backlog."
+            }
+          />
         </div>
       ) : (
         <div className="glass-panel overflow-hidden flex flex-col flex-1 min-h-0">
@@ -205,7 +254,9 @@ export function LagMonitorTab() {
             </table>
           </div>
           <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border shrink-0 bg-black/20">
-            Showing top {Math.min(filtered.length, 5)} of {groups?.length ?? 0} groups
+            {showStale
+              ? `Showing top ${Math.min(filtered.length, 5)} of ${staleCount} stale groups (retained backlog)`
+              : `Showing top ${Math.min(filtered.length, 5)} of ${activeFiltered.length} active groups${staleCount > 0 ? ` · ${staleCount} stale hidden` : ""}`}
           </div>
         </div>
       )}

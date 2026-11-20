@@ -39,11 +39,19 @@ export function MetricCard({
       {trend && (
         <div
           className={cn(
-            "mt-1 text-xs font-medium",
+            "mt-1 text-xs font-medium flex items-center gap-1.5",
             trend.positive ? "text-status-healthy" : "text-semantic-red"
           )}
         >
-          {trend.positive ? "↑" : "↓"} {trend.value}
+          {/* Status dot, not an arrow: "All Healthy" is a state, not a
+              metric that went up or down. */}
+          <span
+            className={cn(
+              "size-1.5 rounded-full shrink-0",
+              trend.positive ? "bg-status-healthy" : "bg-semantic-red"
+            )}
+          />
+          {trend.value}
         </div>
       )}
     </div>
